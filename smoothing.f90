@@ -93,7 +93,10 @@ contains
     integer :: ipoin, ipsup, n
     real*8 :: X_new, Y_new, X_old, Y_old, dX, dY, mu_old
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if(.not.allocated(psup1).or..not.allocated(psup2)) call getPsup(inpoel, NELEM, NPOIN)
+    if(.not.allocated(psup1).or..not.allocated(psup2))then
+     call getPsup(inpoel, NELEM, NPOIN)
+    
+    end if	
     do ipoin = 1, NPOIN
        if(.not.fixed(ipoin)) then
           X_new = 0

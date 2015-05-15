@@ -18,6 +18,8 @@ PROGRAM NSComp2D
   use MeshData
   use MeshMove
   use smoothing_mod
+  use implicit
+
   implicit real(8) (A-H, O-Z)
 
   integer BANDERA, NESTAB
@@ -83,7 +85,7 @@ PROGRAM NSComp2D
 !!$  end do
 
   !call smoothing(X, Y, inpoel, smooth_fix, npoin, nelem, .95d0)
-
+  call CallAll
   if(NGAS.NE.1) GAMM = GAMA
 
   !CCCC-----> CALCULO DE LOS NODOS CON PERIODICIDAD
