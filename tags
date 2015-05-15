@@ -1,0 +1,319 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+1	ns2DComp.ALE.f90	/^	1   if(Z2.GT.1.50D0) GO TO 2$/;"	l	subroutine:TGAS	file:
+10	ns2DComp.ALE.f90	/^	10  GAS1=1.12688D0-.025957D0*Y2$/;"	l	subroutine:TGAS	file:
+11	ns2DComp.ALE.f90	/^	11  if(Z2.GT..65D0) GO TO 12$/;"	l	subroutine:TGAS	file:
+111	subrutinas.f90	/^	111 CONTINUE$/;"	l	subroutine:ADAMSB	file:
+112	subrutinas.f90	/^	112 CONTINUE$/;"	l	subroutine:RK	file:
+12	ns2DComp.ALE.f90	/^	12  if(Z2.GT.1.68D0) GO TO 13$/;"	l	subroutine:TGAS	file:
+13	ns2DComp.ALE.f90	/^	13  if(Z2.GT.2.46D0) GO TO 14$/;"	l	subroutine:TGAS	file:
+14	ns2DComp.ALE.f90	/^	14  GAS1=1.54363D0-.049071D0*Y2$/;"	l	subroutine:TGAS	file:
+15	ns2DComp.ALE.f90	/^	15  GAS10=1.d0\/(1.+GAS7)$/;"	l	subroutine:TGAS	file:
+16	ns2DComp.ALE.f90	/^	16  GAS8=GAS3-GAS4*Z2$/;"	l	subroutine:TGAS	file:
+17	ns2DComp.ALE.f90	/^	17  SNDSQ=E*(A1+(GAMM-1.d0)*(GAMM+A2*GAME)+A3*GAMR)$/;"	l	subroutine:TGAS	file:
+18	ns2DComp.ALE.f90	/^	18  A=DSQRT(SNDSQ)$/;"	l	subroutine:TGAS	file:
+19	ns2DComp.ALE.f90	/^	19  if(Z3.GT.1.0D0) GO TO 20$/;"	l	subroutine:TGAS	file:
+2	ns2DComp.ALE.f90	/^	2   if(Z2.GT.2.20D0) GO TO 3$/;"	l	subroutine:TGAS	file:
+20	ns2DComp.ALE.f90	/^	20  if(Z3.GT.1.35D0) GO TO 21$/;"	l	subroutine:TGAS	file:
+21	ns2DComp.ALE.f90	/^	21  if(Z3.GT.1.79D0) GO TO 22$/;"	l	subroutine:TGAS	file:
+22	ns2DComp.ALE.f90	/^	22  if(Z3.GT.2.47D0) GO TO 23$/;"	l	subroutine:TGAS	file:
+23	ns2DComp.ALE.f90	/^	23  T=10.d0**(-45.0871D0-9.00504D0*Y2+(35.8685D0+6.79222D0*Y2)*Z3-(6.77699D0 &$/;"	l	subroutine:TGAS	file:
+24	ns2DComp.ALE.f90	/^	24  if(Z3.GT..48D0) GO TO 25$/;"	l	subroutine:TGAS	file:
+25	ns2DComp.ALE.f90	/^	25  if(Z3.GT..9165D0) GO TO 26$/;"	l	subroutine:TGAS	file:
+26	ns2DComp.ALE.f90	/^	26  if(Z3.GT.1.478D0) GO TO 27$/;"	l	subroutine:TGAS	file:
+27	dataLoader.f90	/^27  if (IERROR.NE.0) then$/;"	l	subroutine:loadMeshData	file:
+27	ns2DComp.ALE.f90	/^	27  if(Z3.GT.2.176D0) GO TO 28$/;"	l	subroutine:TGAS	file:
+28	ns2DComp.ALE.f90	/^	28  T=10.d0**(1.47540D0+.12962D0*Y2+(.254154D0-.046411D0*Y2)*Z3+(-.221229D0 &$/;"	l	subroutine:TGAS	file:
+29	ns2DComp.ALE.f90	/^	29  if(Z3.GT..48D0) GO TO 30$/;"	l	subroutine:TGAS	file:
+3	ns2DComp.ALE.f90	/^	3   if(Z2.GT.3.05D0) GO TO 4$/;"	l	subroutine:TGAS	file:
+30	ns2DComp.ALE.f90	/^	30  if(Z3.GT.1.07D0) GO TO 31$/;"	l	subroutine:TGAS	file:
+31	ns2DComp.ALE.f90	/^	31  T=10.d0**(.233261D0-.056383D0*Y2+(1.19783D0+.063121D0*Y2-.165985D0*Z3)*Z3+ &$/;"	l	subroutine:TGAS	file:
+32	ns2DComp.ALE.f90	/^	32  T=T*151.777778D0$/;"	l	subroutine:TGAS	file:
+4	ns2DComp.ALE.f90	/^	4   if(Z2.GT.3.38D0) GO TO 5$/;"	l	subroutine:TGAS	file:
+5	ns2DComp.ALE.f90	/^	5   GAMM=-84.0327D0+(-.331761D0+.001153D0*Y2)*Y2+(72.2066D0+.491914D0*Y2)*Z2 &$/;"	l	subroutine:TGAS	file:
+6	ns2DComp.ALE.f90	/^	6   if(Z2.GT..65D0) GO TO 7$/;"	l	subroutine:TGAS	file:
+7	ns2DComp.ALE.f90	/^	7   if(Z2.GT.1.54D0) GO TO 8$/;"	l	subroutine:TGAS	file:
+8	ns2DComp.ALE.f90	/^	8   if(Z2.GT.2.22D0) GO TO 9$/;"	l	subroutine:TGAS	file:
+9	ns2DComp.ALE.f90	/^	9   if(Z2.GT.2.90D0) GO TO 10$/;"	l	subroutine:TGAS	file:
+ADAMSB	subrutinas.f90	/^subroutine ADAMSB(/;"	s
+BiconjGrad	biconjGrad.f90	/^module BiconjGrad$/;"	m
+CTE	dataLoader.f90	/^	real(8) FSAFE, CTE$/;"	v	module:InputData
+CUARTO_ORDEN	subrutinas.f90	/^subroutine CUARTO_ORDEN(/;"	s
+C_inf	dataLoader.f90	/^    real(8) U_inf, V_inf, T_inf, RHO_inf, MACH_inf, P_inf, C_inf$/;"	v	module:InputData
+D	spring.f90	/^	real*8, dimension(:), allocatable :: R, D,/;"	v	module:spring_mod
+E	commonModules.f90	/^    REA/;"	v	module:MVARIABLES
+E	spring.f90	/^	real*8, dimension(:), allocatable :: S, E$/;"	v	module:spring_mod
+ENERCHAR	dataLoader.f90	/^    character(4) RHOCHAR, VEL2CHAR, MACHCHAR, PRESCHAR, TEMPCHAR, ENERCHAR,/;"	v	module:InputData
+ERROR_TOL	laplacianSmoothing.f90	/^	real*8, parameter :: ERROR_TOL /;"	v	module:laplacianSmoothing_mod
+ERROR_TOL	spring.f90	/^	real*8, parameter :: ERROR_TOL /;"	v	module:spring_mod
+ESTAB	subrutinas.f90	/^SUBROUTINE ESTAB(/;"	s
+ESTIMADOR_ERR	ns2DComp.ALE.f90	/^			subroutine ESTIMADOR_ERR(/;"	s
+ETA_REFIN	dataLoader.f90	/^    real(8) ETA_REFIN,/;"	v	module:InputData
+FACTOR_DELTA	smoothing.f90	/^	real*8, parameter :: FACTOR_DELTA /;"	v	module:smoothing_mod
+FACTOR_PLUS	smoothing.f90	/^	real*8, parameter :: FACTOR_PLUS /;"	v	module:smoothing_mod
+FACTOR_STEP	smoothing.f90	/^	real*8, parameter :: FACTOR_STEP /;"	v	module:smoothing_mod
+FACTOR_TOL_DIST	smoothing.f90	/^	real*8, parameter :: FACTOR_TOL_DIST /;"	v	module:smoothing_mod
+FCv	dataLoader.f90	/^    real(8) FR, FMU, FGX, FGY, QH, FK, FCv,/;"	v	module:InputData
+FGX	dataLoader.f90	/^    real(8) FR, FMU, FGX,/;"	v	module:InputData
+FGY	dataLoader.f90	/^    real(8) FR, FMU, FGX, FGY,/;"	v	module:InputData
+FILENAME	dataLoader.f90	/^	character(80) FILENAME /;"	v	module:InputData
+FIX	subrutinas.f90	/^subroutine FIX(/;"	s
+FK	dataLoader.f90	/^    real(8) FR, FMU, FGX, FGY, QH, FK,/;"	v	module:InputData
+FMU	dataLoader.f90	/^    real(8) FR, FMU,/;"	v	module:InputData
+FORCES	meshMove.f90	/^	subroutine FORCES(/;"	s
+FORCE_VISC	ns2DComp.ALE.f90	/^	subroutine FORCE_VISC(/;"	s
+FR	dataLoader.f90	/^    real(8) FR,/;"	v	module:InputData
+FSAFE	dataLoader.f90	/^	real(8) FSAFE,/;"	v	module:InputData
+FUENTE	subrutinas.f90	/^subroutine FUENTE(/;"	s
+GAMA	dataLoader.f90	/^    real(8) FR, FMU, FGX, FGY, QH, FK, FCv, GAMA$/;"	v	module:InputData
+GAUSS	meshMove.f90	/^	subroutine GAUSS(/;"	s
+HH	dataLoader.f90	/^    real(8), dimension(:), allocatable :: X, Y, HHX/;"	v	module:MeshData
+HHMAX_REFIN	dataLoader.f90	/^    real(8) ETA_REFIN, HHMAX_REFIN,/;"	v	module:InputData
+HHMIN_REFIN	dataLoader.f90	/^    real(8) ETA_REFIN, HHMAX_REFIN, HHMIN_REFIN$/;"	v	module:InputData
+HHX	dataLoader.f90	/^    real(8), dimension(:), allocatable :: X, Y, HHX,/;"	v	module:MeshData
+HHY	dataLoader.f90	/^    real(8), dimension(:), allocatable :: X, Y, HHX, HHY,/;"	v	module:MeshData
+H_MIN_GLOBAL	smoothing.f90	/^	real*8 :: H_MIN_GLOBAL$/;"	v	module:smoothing_mod
+IFIXRHO_NODE	dataLoader.f90	/^    integer, dimension(:), allocatable :: IFIXRHO_NODE,/;"	v	module:MeshData
+IFIXT_NODE	dataLoader.f90	/^    integer, dimension(:), allocatable :: IFIXRHO_NODE, IFIXV_NODE, IFIXT_NODE$/;"	v	module:MeshData
+IFIXV_NODE	dataLoader.f90	/^    integer, dimension(:), allocatable :: IFIXRHO_NODE, IFIXV_NODE,/;"	v	module:MeshData
+IPRINT	dataLoader.f90	/^	integer IRESTART, MAXITER, IPRINT,/;"	v	module:InputData
+IRESTART	dataLoader.f90	/^	integer IRESTART,/;"	v	module:InputData
+ISET	dataLoader.f90	/^    integer, dimension(:, :, :), allocatable :: ISET$/;"	v	module:MeshData
+ITLOCAL	dataLoader.f90	/^	integer IRESTART, MAXITER, IPRINT, MOVIE, ITLOCAL,/;"	v	module:InputData
+InputData	dataLoader.f90	/^module InputData /;"	m
+M	dataLoader.f90	/^    real(8), dimension(:), allocatable :: X, Y, HHX, HHY, HH, M,/;"	v	module:MeshData
+MACHCHAR	dataLoader.f90	/^    character(4) RHOCHAR, VEL2CHAR, MACHCHAR,/;"	v	module:InputData
+MACH_inf	dataLoader.f90	/^    real(8) U_inf, V_inf, T_inf, RHO_inf, MACH_inf,/;"	v	module:InputData
+MASAS	subrutinas.f90	/^subroutine MASAS(/;"	s
+MATVEC	meshMove.f90	/^	subroutine MATVEC(/;"	s
+MAXITER	dataLoader.f90	/^	integer IRESTART, MAXITER,/;"	v	module:InputData
+MAX_ELEM_PER_NODE	smoothing.f90	/^	integer, parameter :: MAX_ELEM_PER_NODE /;"	v	module:smoothing_mod
+MAX_ITER	laplacianSmoothing.f90	/^	integer, parameter :: MAX_ITER /;"	v	module:laplacianSmoothing_mod
+MAX_ITER	spring.f90	/^	integer, parameter :: MAX_ITER /;"	v	module:spring_mod
+MESTABILIZACION	commonModules.f90	/^MODULE MESTABILIZACION$/;"	m
+MITER	smoothing.f90	/^	integer, parameter :: NITER = 4, MITER /;"	v	module:smoothing_mod
+MOVIE	dataLoader.f90	/^	integer IRESTART, MAXITER, IPRINT, MOVIE,/;"	v	module:InputData
+MOVING	dataLoader.f90	/^	integer IRESTART, MAXITER, IPRINT, MOVIE, ITLOCAL, MOVING$/;"	v	module:InputData
+MVARIABGEN	commonModules.f90	/^MODULE MVARIABGEN$/;"	m
+MVARIABLES	commonModules.f90	/^MODULE MVARIABLES$/;"	m
+MVELOCIDADES	commonModules.f90	/^MODULE MVELOCIDADES$/;"	m
+MeshData	dataLoader.f90	/^module MeshData /;"	m
+Mlaplace	mLaplace.f90	/^module Mlaplace$/;"	m
+NDIM	dataLoader.f90	/^	integer NDIM /;"	v	module:InputData
+NELEM	smoothing.f90	/^	integer :: NELEM,/;"	v	module:smoothing_mod
+NEWMARK_METHOD	meshMove.f90	/^	subroutine NEWMARK_METHOD(/;"	s
+NEWPRES	ns2DComp.ALE.f90	/^			subroutine NEWPRES(/;"	s
+NEW_SIZE	ns2DComp.ALE.f90	/^			subroutine NEW_SIZE(/;"	s
+NGAS	dataLoader.f90	/^    integer NGAS /;"	v	module:InputData
+NITER	smoothing.f90	/^	integer, parameter :: NITER /;"	v	module:smoothing_mod
+NMASTER	dataLoader.f90	/^    integer NSLAVE, NMASTER /;"	v	module:MeshData
+NPOIN	smoothing.f90	/^	integer :: NELEM, NPOIN$/;"	v	module:smoothing_mod
+NSLAVE	dataLoader.f90	/^    integer NSLAVE,/;"	v	module:MeshData
+NTRY	smoothing.f90	/^	integer, parameter :: NITER = 4, MITER = 2, NTRY /;"	v	module:smoothing_mod
+P	commonModules.f90	/^    REAL(8), DIMENSION(:), ALLOCATABLE:: P,/;"	v	module:MVARIABLES
+PERIODIC	ns2DComp.ALE.f90	/^subroutine PERIODIC$/;"	s
+POSCHAR	dataLoader.f90	/^    character(4) RHOCHAR, VEL2CHAR, MACHCHAR, PRESCHAR, TEMPCHAR, ENERCHAR, POSCHAR$/;"	v	module:InputData
+PRESCHAR	dataLoader.f90	/^    character(4) RHOCHAR, VEL2CHAR, MACHCHAR, PRESCHAR,/;"	v	module:InputData
+PRINTFLAVIA	ns2DComp.ALE.f90	/^	subroutine PRINTFLAVIA(/;"	s
+PRINTREST	ns2DComp.ALE.f90	/^		subroutine PRINTREST(/;"	s
+PRINT_INTERVAL	laplacianSmoothing.f90	/^	integer, parameter :: PRINT_INTERVAL /;"	v	module:laplacianSmoothing_mod
+PRINT_INTERVAL	spring.f90	/^	integer, parameter :: PRINT_INTERVAL /;"	v	module:spring_mod
+P_inf	dataLoader.f90	/^    real(8) U_inf, V_inf, T_inf, RHO_inf, MACH_inf, P_inf,/;"	v	module:InputData
+PointNeighbor	pointNeighbor.f90	/^module PointNeighbor$/;"	m
+QH	dataLoader.f90	/^    real(8) FR, FMU, FGX, FGY, QH,/;"	v	module:InputData
+R	spring.f90	/^	real*8, dimension(:), allocatable :: R,/;"	v	module:spring_mod
+RESTART	ns2DComp.ALE.f90	/^subroutine RESTART(/;"	s
+RFIXRHO_VALUE	dataLoader.f90	/^    real(8), dimension(:), allocatable :: RFIXRHO_VALUE,/;"	v	module:MeshData
+RFIXT_VALUE	dataLoader.f90	/^    real(8), dimension(:), allocatable :: RFIXV_VALUEY, RFIXT_VALUE$/;"	v	module:MeshData
+RFIXV_VALUEX	dataLoader.f90	/^    real(8), dimension(:), allocatable :: RFIXRHO_VALUE, RFIXV_VALUEX$/;"	v	module:MeshData
+RFIXV_VALUEY	dataLoader.f90	/^    real(8), dimension(:), allocatable :: RFIXV_VALUEY,/;"	v	module:MeshData
+RHO	commonModules.f90	/^    REAL(8), DIMENSION(:), ALLOCATABLE:: P, T, RHO,/;"	v	module:MVARIABLES
+RHOCHAR	dataLoader.f90	/^    character(4) RHOCHAR,/;"	v	module:InputData
+RHO_inf	dataLoader.f90	/^    real(8) U_inf, V_inf, T_inf, RHO_inf,/;"	v	module:InputData
+RHS	commonModules.f90	/^    REAL(8), DIMENSION(:, :), ALLOCATABLE:: U, U1, U2, RHS,/;"	v	module:MVARIABGEN
+RHS1	commonModules.f90	/^    REAL(8), DIMENSION(:, :), ALLOCATABLE:: U, U1, U2, RHS, RHS1,/;"	v	module:MVARIABGEN
+RHS2	commonModules.f90	/^    REAL(8), DIMENSION(:, :), ALLOCATABLE:: U, U1, U2, RHS, RHS1, RHS2,/;"	v	module:MVARIABGEN
+RHS3	commonModules.f90	/^    REAL(8), DIMENSION(:, :), ALLOCATABLE:: U, U1, U2, RHS, RHS1, RHS2, RHS3,/;"	v	module:MVARIABGEN
+RK	subrutinas.f90	/^subroutine RK(/;"	s
+RMACH	commonModules.f90	/^    REAL(8), DIMENSION(:), ALLOCATABLE:: P, T, RHO, E, RMACH$/;"	v	module:MVARIABLES
+RMU1	meshMove.f90	/^FUNCTION RMU1(/;"	f
+S	spring.f90	/^	real*8, dimension(:), allocatable :: S,/;"	v	module:spring_mod
+SHOC	commonModules.f90	/^    REAL(8) , DIMENSION(:), ALLOCATABLE:: SHOC,/;"	v	module:MESTABILIZACION
+SMOOTH_MESH	meshMove.f90	/^subroutine SMOOTH_MESH(/;"	s
+SWITCH_TOL_MOVE	smoothing.f90	/^	logical, save :: SWITCH_TOL_MOVE /;"	v	module:smoothing_mod
+SpMV	biconjGrad.f90	/^subroutine SpMV(/;"	s	module:BiconjGrad
+SpMV	spring.f90	/^		subroutine SpMV(/;"	s	subroutine:main
+T	commonModules.f90	/^    REAL(8), DIMENSION(:), ALLOCATA/;"	v	module:MVARIABLES
+TEMPCHAR	dataLoader.f90	/^    character(4) RHOCHAR, VEL2CHAR, MACHCHAR, PRESCHAR, TEMPCHAR,/;"	v	module:InputData
+TGAS	ns2DComp.ALE.f90	/^subroutine TGAS(/;"	s
+TIMERS	commonModules.f90	/^MODULE TIMERS$/;"	m
+TOL_METRIC	smoothing.f90	/^	real*8, parameter :: TOL_METRIC /;"	v	module:smoothing_mod
+TRANSF	meshMove.f90	/^	subroutine TRANSF(/;"	s
+TWOSQRT3	mLaplace.f90	/^	real*8, parameter :: TWOSQRT3 /;"	v	module:Mlaplace
+TWOSQRT3	smoothing.f90	/^	real*8, parameter :: TWOSQRT3 /;"	v	module:smoothing_mod
+TWOSQRT3	spring.f90	/^	real*8, parameter :: TWOSQRT3 /;"	v	module:spring_mod
+T_SUGN1	commonModules.f90	/^    REAL(8) , DIMENSION(:), ALLOCATABLE:: SHOC, T_SUGN1,/;"	v	module:MESTABILIZACION
+T_SUGN2	commonModules.f90	/^    REAL(8) , DIMENSION(:), ALLOCATABLE:: SHOC, T_SUGN1, T_SUGN2,/;"	v	module:MESTABILIZACION
+T_SUGN3	commonModules.f90	/^    REAL(8) , DIMENSION(:), ALLOCATABLE:: SHOC, T_SUGN1, T_SUGN2, T_SUGN3$/;"	v	module:MESTABILIZACION
+T_inf	dataLoader.f90	/^    real(8) U_inf, V_inf, T_inf,/;"	v	module:InputData
+U	commonModules.f90	/^    REAL(8), DIMENSION(:, :), ALLOCATABLE:: U,/;"	v	module:MVARIABGEN
+U1	commonModules.f90	/^    REAL(8), DIMENSION(:, :), ALLOCATABLE:: U, U1,/;"	v	module:MVARIABGEN
+U2	commonModules.f90	/^    REAL(8), DIMENSION(:, :), ALLOCATABLE:: U, U1, U2,/;"	v	module:MVARIABGEN
+UN	commonModules.f90	/^    REAL(8), DIMENSION(:, :), ALLOCATABLE:: U, U1, U2, RHS, RHS1, RHS2, RHS3, UN$/;"	v	module:MVARIABGEN
+U_inf	dataLoader.f90	/^    real(8) U_inf,/;"	v	module:InputData
+VEL2CHAR	dataLoader.f90	/^    character(4) RHOCHAR, VEL2CHAR,/;"	v	module:InputData
+VEL_X	commonModules.f90	/^    REAL(8), DIMENSION(:), ALLOCATABLE:: VEL_X,/;"	v	module:MVELOCIDADES
+VEL_Y	commonModules.f90	/^    REAL(8), DIMENSION(:), ALLOCATABLE:: VEL_X, VEL_Y,/;"	v	module:MVELOCIDADES
+V_inf	dataLoader.f90	/^    real(8) U_inf, V_inf,/;"	v	module:InputData
+W_X	commonModules.f90	/^    REAL(8), DIMENSION(:), ALLOCATABLE:: VEL_X, VEL_Y, W_X,/;"	v	module:MVELOCIDADES
+W_Y	commonModules.f90	/^    REAL(8), DIMENSION(:), ALLOCATABLE:: VEL_X, VEL_Y, W_X, W_Y$/;"	v	module:MVELOCIDADES
+W_x_old	gcl.f90	/^	real*8, dimension(:), allocatable :: area_old, W_x_old,/;"	v	module:gcl_mod
+W_y_old	gcl.f90	/^	real*8, dimension(:), allocatable :: area_old, W_x_old, W_y_old$/;"	v	module:gcl_mod
+X	dataLoader.f90	/^    real(8), dimension(:), allocatable :: X,/;"	v	module:MeshData
+XREF	dataLoader.f90	/^	real(8) XREF(/;"	v	module:InputData
+X_aux	spring.f90	/^	real*8, dimension(:), allocatable :: X_aux,/;"	v	module:spring_mod
+Y	dataLoader.f90	/^    real(8), dimension(:), allocatable :: X, Y,/;"	v	module:MeshData
+YREF	dataLoader.f90	/^	real(8) XREF(10), YREF(/;"	v	module:InputData
+Y_aux	spring.f90	/^	real*8, dimension(:), allocatable :: X_aux, Y_aux$/;"	v	module:spring_mod
+allocateMeshData	dataLoader.f90	/^subroutine allocateMeshData$/;"	s	module:MeshData
+allocateNewmark	meshMove.f90	/^	subroutine allocateNewmark$/;"	s
+area	dataLoader.f90	/^    real(8), dimension(:), allocatable :: X, Y, HHX, HHY, HH, M, area$/;"	v	module:MeshData
+area_old	gcl.f90	/^	real*8, dimension(:), allocatable :: area_old,/;"	v	module:gcl_mod
+assign	biconjGrad.f90	/^subroutine assign(/;"	s	module:BiconjGrad
+assign2	biconjGrad.f90	/^subroutine assign2(/;"	s	module:BiconjGrad
+b	spring.f90	/^	real*8, dimension(:), allocatabl/;"	v	module:spring_mod
+biCG	biconjGrad.f90	/^subroutine biCG(/;"	s	module:BiconjGrad
+buildRD	spring.f90	/^		subroutine buildRD(/;"	s	subroutine:main
+buildSE	spring.f90	/^		subroutine buildSE(/;"	s	subroutine:main
+calcRHS	calcRHS.f90	/^	subroutine calcRHS(/;"	s	module:calcRHS_mod
+calcRHS	calcRHS_module.f90	/^	subroutine calcRHS&/;"	s	module:calcRHS_module
+calcRHS	subrutinas.f90	/^subroutine calcRHS(/;"	s
+calcRHS_mod	calcRHS.f90	/^module calcRHS_mod$/;"	m
+calcRHS_module	calcRHS_module.f90	/^module calcRHS_module$/;"	m
+calcrhs_t	commonModules.f90	/^    real calcrhs_t,/;"	v	module:TIMERS
+checkMesh	smoothing.f90	/^	subroutine checkMesh(/;"	s
+cmpMtx	subrutinas.f90	/^real*8 function cmpMtx(/;"	f
+coord_new	laplacianSmoothing.f90	/^	real*8, dimension(:,:), allocatable :: coord_new$/;"	v	module:laplacianSmoothing_mod
+copy1	biconjGrad.f90	/^subroutine copy1(/;"	s	module:BiconjGrad
+copy2	biconjGrad.f90	/^subroutine copy2(/;"	s	module:BiconjGrad
+cuarto_t	commonModules.f90	/^    real calcrhs_t, cuarto_t,/;"	v	module:TIMERS
+dNx	dataLoader.f90	/^    real(8), dimension(:, :), allocatable :: dNx,/;"	v	module:MeshData
+dNy	dataLoader.f90	/^    real(8), dimension(:, :), allocatable :: dNx, dNy$/;"	v	module:MeshData
+deltat	subrutinas.f90	/^subroutine deltat(/;"	s
+deriv	subrutinas.f90	/^subroutine deriv(/;"	s
+deriv_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t,/;"	v	module:TIMERS
+displayStats	laplacianSmoothing.f90	/^		subroutine displayStats(/;"	s	subroutine:main
+dt	laplacianSmoothing.f90	/^	real*8, parameter :: dt /;"	v	module:laplacianSmoothing_mod
+e	laplacianSmoothing.f90	/^	rea/;"	v	module:laplacianSmoothing_mod
+end_t	commonModules.f90	/^    integer rate, start_t, end_t,/;"	v	module:TIMERS
+epsil	spring.f90	/^	real*8, parameter :: epsil /;"	v	module:spring_mod
+error	laplacianSmoothing.f90	/^		real*8 function error(/;"	f	subroutine:main
+estab_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t, laplace_t, normales_t, forces_t, newmark_t, grad_t, transf_t, estab_t$/;"	v	module:TIMERS
+esup1	pointNeighbor.f90	/^	integer, dimension(:), allocatable :: esup1,/;"	v	module:PointNeighbor
+esup2	pointNeighbor.f90	/^	integer, dimension(:), allocatable :: esup1, esup2 /;"	v	module:PointNeighbor
+fixvel	subrutinas.f90	/^subroutine fixvel$/;"	s
+fluidStructure	meshMove.f90	/^	subroutine fluidStructure(/;"	s
+forces_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t, laplace_t, normales_t, forces_t,/;"	v	module:TIMERS
+fuente_t	commonModules.f90	/^	real spmv_t, residuo_t, fuente_t,/;"	v	module:TIMERS
+gcl_mod	gcl.f90	/^module gcl_mod$/;"	m
+getEsup	pointNeighbor.f90	/^subroutine getEsup(/;"	s	module:PointNeighbor
+getG	smoothing.f90	/^	subroutine getG(/;"	s	module:smoothing_mod
+getH_min	smoothing.f90	/^	real*8 function getH_min(/;"	f	module:smoothing_mod
+getMeshQuality	smoothing.f90	/^	pure real*8 function getMeshQuality(/;"	f
+getMeshQuality	spring.f90	/^		real*8 function getMeshQuality(/;"	f	subroutine:main
+getMu_min	smoothing.f90	/^	real*8 function getMu_min(/;"	f	module:smoothing_mod
+getMu_vec	smoothing.f90	/^	subroutine getMu_vec(/;"	s	module:smoothing_mod
+getPsup	pointNeighbor.f90	/^subroutine getPsup(/;"	s	module:PointNeighbor
+getStep	smoothing.f90	/^	real*8 function getStep(/;"	f	module:smoothing_mod
+grad_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t, laplace_t, normales_t, forces_t, newmark_t, grad_t,/;"	v	module:TIMERS
+h	smoothing.f90	/^	pure real*8 function h(/;"	f
+handleError	dataLoader.f90	/^subroutine handleError(/;"	s	module:MeshData
+i_m	dataLoader.f90	/^    integer, dimension(:), allocatable :: ifm, i_m,/;"	v	module:MeshData
+ielem_sets	dataLoader.f90	/^	integer ielem_sets(/;"	v	module:MeshData
+ifm	dataLoader.f90	/^    integer, dimension(:), allocatable :: ifm,/;"	v	module:MeshData
+ilaux	dataLoader.f90	/^    integer, dimension(:), allocatable :: ifm, i_m, ilaux$/;"	v	module:MeshData
+initialize	mLaplace.f90	/^subroutine initialize(/;"	s	module:Mlaplace
+inpoel	dataLoader.f90	/^    integer, dimension(:, :), allocatable :: inpoel$/;"	v	module:MeshData
+iper_aux	dataLoader.f90	/^    integer, dimension(:), allocatable :: iper_master, iper_slave, iper_aux$/;"	v	module:MeshData
+iper_master	dataLoader.f90	/^    integer, dimension(:), allocatable :: iper_master,/;"	v	module:MeshData
+iper_slave	dataLoader.f90	/^    integer, dimension(:), allocatable :: iper_master, iper_slave,/;"	v	module:MeshData
+jacobi	spring.f90	/^		subroutine jacobi(/;"	s	subroutine:main
+lap_diag	mLaplace.f90	/^	real(8), dimension(:), allocatable :: lap_sparse, lap_diag$/;"	v	module:Mlaplace
+lap_idx	mLaplace.f90	/^	integer, dimension(:), allocatable :: lap_idx,/;"	v	module:Mlaplace
+lap_rowptr	mLaplace.f90	/^	integer, dimension(:), allocatable :: lap_idx, lap_rowptr$/;"	v	module:Mlaplace
+lap_sparse	mLaplace.f90	/^	real(8), dimension(:), allocatable :: lap_sparse,/;"	v	module:Mlaplace
+laplace	mLaplace.f90	/^subroutine laplace(/;"	s	module:Mlaplace
+laplace_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t, laplace_t,/;"	v	module:TIMERS
+laplacianSmoothing	smoothing.f90	/^	subroutine laplacianSmoothing(/;"	s	module:smoothing_mod
+laplacianSmoothing_mod	laplacianSmoothing.f90	/^module laplacianSmoothing_mod$/;"	m
+loadMeshData	dataLoader.f90	/^subroutine loadMeshData$/;"	s	module:MeshData
+lpoin	pointNeighbor.f90	/^	integer, dimension(:), allocatable :: psup1, psup2, lpoin$/;"	v	module:PointNeighbor
+m_end	commonModules.f90	/^    integer rate, start_t, end_t, sub_start, sub_end, sub_rate, m_start, m_end,/;"	v	module:TIMERS
+m_rate	commonModules.f90	/^    integer rate, start_t, end_t, sub_start, sub_end, sub_rate, m_start, m_end, m_rate$/;"	v	module:TIMERS
+m_start	commonModules.f90	/^    integer rate, start_t, end_t, sub_start, sub_end, sub_rate, m_start,/;"	v	module:TIMERS
+main	gcl.f90	/^		subroutine main(/;"	s	module:gcl_mod
+main	laplacianSmoothing.f90	/^	subroutine main(/;"	s	module:laplacianSmoothing_mod
+main	spring.f90	/^	subroutine main(/;"	s	module:spring_mod
+masas_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t,/;"	v	module:TIMERS
+moveIpoin	smoothing.f90	/^	subroutine moveIpoin(/;"	s	module:smoothing_mod
+mu	mLaplace.f90	/^pure real*8 function mu(/;"	f	module:Mlaplace
+mu	smoothing.f90	/^	pure real*8 function mu(/;"	f
+mu	spring.f90	/^		pure real*8 function mu(/;"	f	subroutine:main
+nFixRho	dataLoader.f90	/^    integer npoin, nelem, nFixRho,/;"	v	module:MeshData
+nFixT	dataLoader.f90	/^    integer npoin, nelem, nFixRho, nFixVi, nFixV, nwall, nFixT,/;"	v	module:MeshData
+nFixV	dataLoader.f90	/^    integer npoin, nelem, nFixRho, nFixVi/;"	v	module:MeshData
+nFixVi	dataLoader.f90	/^    integer npoin, nelem, nFixRho, nFixVi,/;"	v	module:MeshData
+nFix_move	dataLoader.f90	/^    integer npoin, nelem, nFixRho, nFixVi, nFixV, nwall, nFixT, nsets, nFix_move,/;"	v	module:MeshData
+nele_set	dataLoader.f90	/^	integer nele_set,/;"	v	module:MeshData
+nelem	dataLoader.f90	/^    integer npoin, nelem,/;"	v	module:MeshData
+newmark_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t, laplace_t, normales_t, forces_t, newmark_t,/;"	v	module:TIMERS
+nmove	dataLoader.f90	/^    integer npoin, nelem, nFixRho, nFixVi, nFixV, nwall, nFixT, nsets, nFix_move, nmove$/;"	v	module:MeshData
+nnmove	dataLoader.f90	/^	integer nele_set, nset_numb, nnmove$/;"	v	module:MeshData
+normales	subrutinas.f90	/^	subroutine normales$/;"	s
+normales_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t, laplace_t, normales_t,/;"	v	module:TIMERS
+normalvel	subrutinas.f90	/^	subroutine normalvel$/;"	s
+npoin	dataLoader.f90	/^    integer npoin,/;"	v	module:MeshData
+nset_numb	dataLoader.f90	/^	integer nele_set, nset_numb,/;"	v	module:MeshData
+nsets	dataLoader.f90	/^    integer npoin, nelem, nFixRho, nFixVi, nFixV, nwall, nFixT, nsets,/;"	v	module:MeshData
+nwall	dataLoader.f90	/^    integer npoin, nelem, nFixRho, nFixVi, nFixV, nwall,/;"	v	module:MeshData
+output_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t,/;"	v	module:TIMERS
+p	biconjGrad.f90	/^	real(8), allocatable, dimension(:) :: y, p,/;"	v	module:BiconjGrad
+printFlag	dataLoader.f90	/^	integer printFlag$/;"	v	module:InputData
+psup1	pointNeighbor.f90	/^	integer, dimension(:), allocatable :: psup1,/;"	v	module:PointNeighbor
+psup2	pointNeighbor.f90	/^	integer, dimension(:), allocatable :: psup1, psup2,/;"	v	module:PointNeighbor
+putArea	gcl.f90	/^		subroutine putArea(/;"	s	module:gcl_mod
+putW	gcl.f90	/^		subroutine putW(/;"	s	module:gcl_mod
+r	biconjGrad.f90	/^	re/;"	v	module:BiconjGrad
+rate	commonModules.f90	/^    integer rate,/;"	v	module:TIMERS
+readInputData	dataLoader.f90	/^subroutine readInputData$/;"	s	module:InputData
+residuo_t	commonModules.f90	/^	real spmv_t, residuo_t,/;"	v	module:TIMERS
+rhs_diffusive	calcRHS.f90	/^		subroutine rhs_diffusive(/;"	s	subroutine:calcRHS
+rhs_diffusive	rhs_diffusive.f90	/^subroutine rhs_diffusive&/;"	s
+rhs_euler	calcRHS.f90	/^		subroutine rhs_euler(/;"	s	subroutine:calcRHS
+setNewmarkCondition	meshMove.f90	/^	subroutine setNewmarkCondition$/;"	s
+setTol_move	smoothing.f90	/^	subroutine setTol_move(/;"	s
+smoothable	smoothing.f90	/^	logical, dimension(:), allocatable :: smoothable$/;"	v	module:smoothing_mod
+smoothing	smoothing.f90	/^	subroutine smoothing(/;"	s	module:smoothing_mod
+smoothing_mod	smoothing.f90	/^module smoothing_mod$/;"	m
+spmv_t	commonModules.f90	/^	real spmv_t,/;"	v	module:TIMERS
+spring_mod	spring.f90	/^module spring_mod$/;"	m
+start_t	commonModules.f90	/^    integer rate, start_t,/;"	v	module:TIMERS
+sub_end	commonModules.f90	/^    integer rate, start_t, end_t, sub_start, sub_end,/;"	v	module:TIMERS
+sub_rate	commonModules.f90	/^    integer rate, start_t, end_t, sub_start, sub_end, sub_rate,/;"	v	module:TIMERS
+sub_start	commonModules.f90	/^    integer rate, start_t, end_t, sub_start,/;"	v	module:TIMERS
+tol_move	smoothing.f90	/^	real*8, dimension(:), allocatable :: tol_move$/;"	v	module:smoothing_mod
+tot1	gcl.f90	/^	real*8, dimension(:), allocatable :: tot1,/;"	v	module:gcl_mod
+tot2	gcl.f90	/^	real*8, dimension(:), allocatable :: tot1, tot2$/;"	v	module:gcl_mod
+total_t	commonModules.f90	/^	real spmv_t, residuo_t, fuente_t, total_t$/;"	v	module:TIMERS
+transf_t	commonModules.f90	/^    real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t, laplace_t, normales_t, forces_t, newmark_t, grad_t, transf_t,/;"	v	module:TIMERS
+update_list	smoothing.f90	/^	subroutine update_list(/;"	s	module:smoothing_mod
+vecdiv	biconjGrad.f90	/^subroutine vecdiv(/;"	s	module:BiconjGrad
+vecdot	biconjGrad.f90	/^real(8) function vecdot(/;"	f	module:BiconjGrad
+vecsum	biconjGrad.f90	/^subroutine vecsum(/;"	s	module:BiconjGrad
+wall	dataLoader.f90	/^    integer, dimension(:, :), allocatable :: wall$/;"	v	module:MeshData
+y	biconjGrad.f90	/^	real(8), allocatable, dimension(:) :: y,/;"	v	module:BiconjGrad
+z	biconjGrad.f90	/^	real(8), allocatable, dimension(:) :: y, p, r, z$/;"	v	module:BiconjGrad
