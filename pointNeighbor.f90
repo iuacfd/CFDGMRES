@@ -1,5 +1,5 @@
 module PointNeighbor
-  integer, dimension(:), allocatable :: esup1, esup2 
+  integer, dimension(:), allocatable :: esup1, esup2,esup3,esup4 
   integer, dimension(:), allocatable :: psup1, psup2, lpoin
   
 contains
@@ -25,7 +25,7 @@ contains
        esup2(ipoin) = esup2(ipoin) + esup2(ipoin-1)
     end do
 
-    allocate(esup1(esup2(npoin+1))) 
+    allocate(esup1(esup2(npoin+1)),esup3(esup2(npoin+1)*4),esup4(esup2(npoin+1))) 
 
     !obtener el array esup1 de los elementos vecinos
     do ielem=1,nelem

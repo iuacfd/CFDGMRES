@@ -665,48 +665,46 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
   use MVARIABLES
   use MESTABILIZACION
   use TIMERS
-  use PointNeighbor, only: esup1,esup2,esup3,esup4
-  implicit real(8)(A-H,O-Z)
-  integer BANDERA
-  real(8) GAMM(npoin)
-  real(8) dtl(nelem)
+!!$  use PointNeighbor, only: esup1,esup2,esup3,esup4
+!!$  implicit real(8)(A-H,O-Z)
+!!$  integer BANDERA
+!!$  real(8) GAMM(npoin)
+!!$  real(8) dtl(nelem)
+!!$
+!!$  do IRK = 1,NRK
+!!$     RK_FACT = 1.d0/(NRK + 1 - IRK)
+!!$
+!!$     !CCCC  ----> SOLO CALCULO UNA VEZ EL TERMINO DE ESTABILIZACION
+!!$     if(IRK.EQ.1)THEN
+!!$        !DEBUGGG
+!!$        timer(cuarto_orden(U1,UN,FR,gamm), cuarto_t)
+!!$        timer(estab(U,T,GAMA,FR,RMU,DTMIN,RHO_inf,T_inf,U_inf,V_inf,GAMM), estab_t)
+!!$     end if
+!!$
+!!$     !$OMP PARALLEL DO PRIVATE(ipoin)
+!!$     do ipoin = 1, npoin
+!!$	RHS(:, ipoin) = 0.d0
+!!$     end do
+!!$     !$OMP END PARALLEL DO
+!!$
+!!$     timer( calcRHS(rhs, U, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin), calcrhs_t)
+!!$     ! timer(calcRHS(U, UN, RHS, P, RMU, dtl, gamm), calcrhs_t)
+!!$     ! call rhs_diffusive&
+!!$     ! (rhs, U, dnx, dny, area, dtl, T, gamm, fr, fmu, fk, fcv, T_inf, inpoel, npoin, nelem)
+!!$
+!!$     !CCCC  ----> CALCULO DE LOS TERMINOS FUENTES
+!!$     !DEBUGGG
+!!$     timer(FUENTE(dtl), fuente_t)
+!!$
+!!$     !CCCC ----> INTEGRADOR TEMPORAL
+!!$     !$OMP PARALLEL DO PRIVATE(ipoin)
+!!$     ! do ipoin = 1, npoin
+!!$     !	U1(:, ipoin) = U(:, ipoin) - rk_fact/M(ipoin)*RHS(:, ipoin)
+!!$     ! end do
+!!$
 
-  do IRK = 1,NRK
-     RK_FACT = 1.d0/(NRK + 1 - IRK)
-
-     !CCCC  ----> SOLO CALCULO UNA VEZ EL TERMINO DE ESTABILIZACION
-     if(IRK.EQ.1)THEN
-        !DEBUGGG
-        timer(cuarto_orden(U1,UN,FR,gamm), cuarto_t)
-        timer(estab(U,T,GAMA,FR,RMU,DTMIN,RHO_inf,T_inf,U_inf,V_inf,GAMM), estab_t)
-     end if
-
-     !$OMP PARALLEL DO PRIVATE(ipoin)
-     do ipoin = 1, npoin
-	RHS(:, ipoin) = 0.d0
-     end do
-     !$OMP END PARALLEL DO
-
-     timer( calcRHS(rhs, U, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin), calcrhs_t)
-     ! timer(calcRHS(U, UN, RHS, P, RMU, dtl, gamm), calcrhs_t)
-     ! call rhs_diffusive&
-     ! (rhs, U, dnx, dny, area, dtl, T, gamm, fr, fmu, fk, fcv, T_inf, inpoel, npoin, nelem)
-
-     !CCCC  ----> CALCULO DE LOS TERMINOS FUENTES
-     !DEBUGGG
-     timer(FUENTE(dtl), fuente_t)
-
-     !CCCC ----> INTEGRADOR TEMPORAL
-     !$OMP PARALLEL DO PRIVATE(ipoin)
-     ! do ipoin = 1, npoin
-     !	U1(:, ipoin) = U(:, ipoin) - rk_fact/M(ipoin)*RHS(:, ipoin)
-     ! end do
-
-!!$ LLAMADO A SUBRUTINA DE GMRES
      do i=1,4
-        call intimpli(
-
-
+        call intimpli
      end do
      !$OMP END PARALLEL DO
 

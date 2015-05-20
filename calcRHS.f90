@@ -147,14 +147,16 @@ contains
 
        rhs_tmp(:,:) = rhs_tmp(:,:)*area(ielem)*dtl(ielem)/3.d0
 
-       do i = 1, 4
-          !$OMP ATOMIC
-          RHS(i,ipoi1) = RHS(i,ipoi1) + rhs_tmp(i,1)
-          !$OMP ATOMIC
-          RHS(i,ipoi2) = RHS(i,ipoi2) + rhs_tmp(i,2)
-          !$OMP ATOMIC
-          RHS(i,ipoi3) = RHS(i,ipoi3) + rhs_tmp(i,3)
-       end do
+!!$       do i = 1, 4
+!!$          !$OMP ATOMIC
+!!$          RHS(i,ipoi1) = RHS(i,ipoi1) + rhs_tmp(i,1)
+!!$          !$OMP ATOMIC
+!!$          RHS(i,ipoi2) = RHS(i,ipoi2) + rhs_tmp(i,2)
+!!$          !$OMP ATOMIC
+!!$          RHS(i,ipoi3) = RHS(i,ipoi3) + rhs_tmp(i,3)
+!!$       end do
+
+       call rhsvector(rhs_tmp,ipoi1,ipoi2,ipoi3)
     end do
     !$OMP END PARALLEL DO
 
