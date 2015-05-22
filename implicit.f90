@@ -55,14 +55,14 @@ contains
   end subroutine rhsvector
 
 
-  subroutine intimpli(aa,ja,ia,alu,jlu,ju,sol,vv,rhs)
-
+  subroutine intimpli
+    use PointNeighbor, only: esup1,esup2,esup3,esup2l,esup1l
     use MeshData, only: nelem, npoin     
-    integer*4, parameter :: n = npoin, im = 20 !size of krylov subspace
-    integer ( kind = 4 ), parameter :: nz_num = esup2(npoin+1)
+    use varimplicit
+    integer*4, parameter :: n = npoin*4
+    integer(4), parameter :: nz_num = esup2(npoin+1)*4
     real(8) eps,droptol,w(n+1)
-    integer(4) maxits,iout,lfil,droptol,iwk,jw(2*n)
-
+    integer(4) maxits,iout,lfil,iwk,jw(2*n)
     eps=1.D-8
     maxits=100	
     iout=0
@@ -70,13 +70,50 @@ contains
     droptol=1d-3
     iwk=n*5
 
-    call ilut(n,aa,ja,ia,lfil,droptol,alu,jlu,ju,iwk,w,jw,ierr)
-    if (ierr.ne.0) print*, "PROBLEMA DE ILUT:" ierr
-    call pgmres(n, im, rhs, sol, vv, eps, maxits, iout, aa, ja, ia, alu, jlu, ju, ierr)
-    if (ierr.ne.0) print*, "PROBLEMA DE GMRES:" ierr
+    call ilut(n,esup3,esup1l,esup2l,lfil,droptol,alu,jlu,ju,iwk,w,jw,ierr)
 
+    if (ierr.ne.0) print*, "PROBLEMA DE ILUT:" ierr
+    stop
+    call pgmres(n, im, rhsimplicit, sol, vv, eps, maxits, iout, esup3, esup1l, esup2l, alu, jlu, ju, ierr)
+
+    if (ierr.ne.0) print*, "PROBLEMA DE GMRES:" ierr
+    stop
   end subroutine intimpli
 
+subroutine setcondition
+real(8) velocidadx(npoin),velocidady(npoin)
+
+
+!SEPARA RHO*U y RHO*V
+do i=1,npoin
+velocidadx(i)=sol(i+npoin)/sol(i)
+velocidady(i)=sol(i+2*npoin)/sol(i)
+end do
+
+     !SETEAR CONDICIONES DENTRO DEL PGMRES
+     !CCCC---------------------------------------CCCC
+     !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
+     !CCCC---------------------------------------CCCC
+     !CCCC----> VELOCIDADES IMPUESTAS
+     !CCCC---------------------------
+     call FIXVEL(velocidadx,velocidady)
+
+     !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
+     !CCCC--------------------------------------------
+     call NORMALVEL(velocidadx,velocidady)
+
+     !CCCC----> VALORES IMPUESTOS
+     !CCCC-----------------------
+     call FIX(FR,GAMM,sol)
+
+!JUNTAR RHO*U y RHO*V
+do i=1,npoin
+sol(i+npoin)=velocidadx(i)*sol(i)
+sol(i+2*npoin)=velocidady(i)*sol(i)
+end do
+
+
+end subroutine setcondition
 
 
 !!$c-----------------------------------------------------------------------
@@ -287,6 +324,8 @@ contains
 !!$c     
 !!$c     restart outer loop  when necessary
 !!$c     
+
+      call setcondition
       if (ro .le. eps1) goto 990
       if (its .ge. maxits) goto 991
 !!$c     

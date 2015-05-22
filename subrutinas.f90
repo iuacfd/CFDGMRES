@@ -63,26 +63,27 @@ contains
 		end do
 	end subroutine normales
 
-	subroutine normalvel
-		!use mallocar
-		!use mnormales
-		!use meshdata
-		use mvelocidades
-		implicit none
-		integer i, ipoin 
-		real(8) vx, vy, wx, wy, p
-
-		!$omp parallel do private(vx, vy, wx, wy, p, i, ipoin)
-		do i = 1, m
-		ipoin = n_ipoin(i)
-		vx = vel_x(ipoin); vy = vel_y(ipoin)
-		wx = w_x(ipoin); wy = w_y(ipoin)
-		p = -n_y(i)*(vx - wx) + n_x(i)*(vy - wy)
-		vel_x(ipoin) = -n_y(i)*p + wx
-		vel_y(ipoin) = n_x(i)*p + wy
-		end do
-		!$omp end parallel do
-	end subroutine normalvel
+ subroutine normalvel(velocidadx,velocidady)
+   !use mallocar
+   !use mnormales
+   !use meshdata
+   use mvelocidades
+   implicit none
+   integer i, ipoin 
+   real(8) vx, vy, wx, wy, p
+   real(8) velocidadx(npoin),velocidady(npoin)
+   !$omp parallel do private(vx, vy, wx, wy, p, i, ipoin)
+   do i = 1, m
+      ipoin = n_ipoin(i)
+      !original       vx = vel_x(ipoin); vy = vel_y(ipoin)
+      vx=velocidadx(ipoin);vy=velocidady(ipoin) 
+      wx = w_x(ipoin); wy = w_y(ipoin)
+      p = -n_y(i)*(vx - wx) + n_x(i)*(vy - wy)
+      velocidadx(ipoin) = -n_y(i)*p + wx
+      velocidady(ipoin) = n_x(i)*p + wy
+   end do
+   !$omp end parallel do
+ end subroutine normalvel
 end module Mnormales
 
 subroutine deriv(hmin) !<----- PARA QUE SE USA HMIN?
@@ -604,24 +605,25 @@ END SUBROUTINE ESTAB
 ! 	return
 ! end subroutine calcRHS
 
-subroutine fixvel
-	!use mallocar
-	!use mvariabfix
-	use mvelocidades
-	use meshdata
-	implicit none
-	integer i, j
+subroutine fixvel(velocidadx,velocidady)
+  !use mallocar
+  !use mvariabfix
+  use mvelocidades
+  use meshdata
+  implicit none
+  real(8) velocidadx(npoin),velocidady(npoin)
+  integer i, j
 
-	!$OMP PARALLEL DO PRIVATE(i, j)
-	do i = 1, nfixv
-	j = ifixv_node(i)
-	vel_x(j) = rfixv_valuex(i)+w_x(j)
-	vel_y(j) = rfixv_valuey(i)+w_y(j)
-	end do
-	!$OMP END PARALLEL DO
+  !$OMP PARALLEL DO PRIVATE(i, j)
+  do i = 1, nfixv
+     j = ifixv_node(i)
+     velocidadx(j) = rfixv_valuex(i)+w_x(j)
+     velocidady(j) = rfixv_valuey(i)+w_y(j)
+  end do
+  !$OMP END PARALLEL DO
 end subroutine FIXVEL
 
-subroutine FIX(FR,GAMM)
+subroutine FIX(FR,GAMM,sol)
 	!use MALLOCAR
 	!use MVARIABFIX
 	use MVELOCIDADES
@@ -633,7 +635,7 @@ subroutine FIX(FR,GAMM)
 	!$OMP PARALLEL
 	!$OMP DO PRIVATE(i)
 	do i = 1, nfixrho
-	rho(ifixrho_node(i)) = rfixrho_value(i)
+	sol(ifixrho_node(i)) = rfixrho_value(i)
 	end do
 	!$OMP END DO
 
@@ -642,7 +644,7 @@ subroutine FIX(FR,GAMM)
 	j = IFIXT_NODE(i)
 	GM = GAMM(j) - 1.d0
 	T(j) = RFIXT_VALUE(i)
-	E(j) = T(j)*FR/GM + .5d0*(VEL_X(j)**2 + VEL_Y(j)**2)
+	sol(j+npoin*3) = T(j)*FR/GM + .5d0*(VELocidadX(j)**2 + VELocidadY(j)**2)
 	end do
 	!$OMP END DO
 	!$OMP END PARALLEL
@@ -666,20 +668,30 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
   use MESTABILIZACION
   use TIMERS
   use PointNeighbor, only: esup1,esup2,esup3,esup4
+  use varimplicit
   implicit real(8)(A-H,O-Z)
   integer BANDERA
   real(8) GAMM(npoin)
-  real(8) dtl(nelem)
+  real(8) dtl(nelem),esup3local(esup2(npoin+1))
 
-  do IRK = 1,NRK
-     RK_FACT = 1.d0/(NRK + 1 - IRK)
+  ! do IRK = 1,NRK
+  !RK_FACT = 1.d0/(NRK + 1 - IRK)
+
+  allocate (alu(esup2(npoin+1)*100),sol(npoin*4),rhsimplicit(npoin*4),jlu(esup2(npoin+1)*100),ju((npoin+1)*4))
+  jlu=0
+  ju=0
+  alu=0.d0
+  vv=0.d0
+  DO !Setear tolerancia para picard o max numero de iteraciones
+
+
 
      !CCCC  ----> SOLO CALCULO UNA VEZ EL TERMINO DE ESTABILIZACION
-     if(IRK.EQ.1)THEN
-        !DEBUGGG
-        timer(cuarto_orden(U1,UN,FR,gamm), cuarto_t)
-        timer(estab(U,T,GAMA,FR,RMU,DTMIN,RHO_inf,T_inf,U_inf,V_inf,GAMM), estab_t)
-     end if
+     !if(IRK.EQ.1)THEN
+     !DEBUGGG
+     timer(cuarto_orden(U1,UN,FR,gamm), cuarto_t)
+     timer(estab(U1,T,GAMA,FR,RMU,DTMIN,RHO_inf,T_inf,U_inf,V_inf,GAMM), estab_t)
+     ! end if
 
      !$OMP PARALLEL DO PRIVATE(ipoin)
      do ipoin = 1, npoin
@@ -687,7 +699,7 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
      end do
      !$OMP END PARALLEL DO
 
-     timer( calcRHS(rhs, U, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin), calcrhs_t)
+     timer( calcRHS(rhs, U1, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin), calcrhs_t)
      ! timer(calcRHS(U, UN, RHS, P, RMU, dtl, gamm), calcrhs_t)
      ! call rhs_diffusive&
      ! (rhs, U, dnx, dny, area, dtl, T, gamm, fr, fmu, fk, fcv, T_inf, inpoel, npoin, nelem)
@@ -703,11 +715,11 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
      ! end do
 
 !!$ LLAMADO A SUBRUTINA DE GMRES
-     do i=1,4
-        call intimpli(
 
+     call intimpli
+!!!!!TAREAAAAAA!!!!! CREAR UN DO PARA PASAR DE SOL A U
+     u1(i,:)=sol(:)
 
-     end do
      !$OMP END PARALLEL DO
 
      !CCCC----------------------------------------------
@@ -753,21 +765,21 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
      end if
 
 
-     !CCCC---------------------------------------CCCC
-     !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
-     !CCCC---------------------------------------CCCC
-
-     !CCCC----> VELOCIDADES IMPUESTAS
-     !CCCC---------------------------
-     call FIXVEL
-
-     !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
-     !CCCC--------------------------------------------
-     call NORMALVEL
-
-     !CCCC----> VALORES IMPUESTOS
-     !CCCC-----------------------
-     call FIX(FR,GAMM)
+!!$     !CCCC---------------------------------------CCCC
+!!$     !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
+!!$     !CCCC---------------------------------------CCCC
+!!$
+!!$     !CCCC----> VELOCIDADES IMPUESTAS
+!!$     !CCCC---------------------------
+!!$     call FIXVEL
+!!$
+!!$     !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
+!!$     !CCCC--------------------------------------------
+!!$     call NORMALVEL
+!!$
+!!$     !CCCC----> VALORES IMPUESTOS
+!!$     !CCCC-----------------------
+!!$     call FIX(FR,GAMM)
 
      !$OMP PARALLEL DO PRIVATE(ipoin)
      do ipoin = 1, npoin
@@ -780,25 +792,25 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
 
   end do
 
-  if (BANDERA.EQ.2) THEN
-     !$OMP PARALLEL DO PRIVATE(ipoin)
-     do ipoin = 1, npoin
-        RHS3(:,ipoin) = RHS(:,ipoin)
-     end do
-     !$OMP END PARALLEL DO
-  else if(BANDERA.EQ.3) THEN
-     !$OMP PARALLEL DO PRIVATE(ipoin)
-     do ipoin = 1, npoin
-        RHS2(:,ipoin) = RHS(:,ipoin)
-     end do
-     !$OMP END PARALLEL DO
-  else if(BANDERA.EQ.4) THEN
-     !$OMP PARALLEL DO PRIVATE(ipoin)
-     do ipoin = 1, npoin
-        RHS1(:,ipoin) = RHS(:,ipoin)
-     end do
-     !$OMP END PARALLEL DO
-  end if
+!!$  if (BANDERA.EQ.2) THEN
+!!$     !$OMP PARALLEL DO PRIVATE(ipoin)
+!!$     do ipoin = 1, npoin
+!!$        RHS3(:,ipoin) = RHS(:,ipoin)
+!!$     end do
+!!$     !$OMP END PARALLEL DO
+!!$  else if(BANDERA.EQ.3) THEN
+!!$     !$OMP PARALLEL DO PRIVATE(ipoin)
+!!$     do ipoin = 1, npoin
+!!$        RHS2(:,ipoin) = RHS(:,ipoin)
+!!$     end do
+!!$     !$OMP END PARALLEL DO
+!!$  else if(BANDERA.EQ.4) THEN
+!!$     !$OMP PARALLEL DO PRIVATE(ipoin)
+!!$     do ipoin = 1, npoin
+!!$        RHS1(:,ipoin) = RHS(:,ipoin)
+!!$     end do
+!!$     !$OMP END PARALLEL DO
+!!$  end if
 end subroutine RK
 
 subroutine ADAMSB(DTMIN, NESTAB, GAMM, dtl)

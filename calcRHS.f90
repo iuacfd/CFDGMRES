@@ -132,7 +132,7 @@ contains
                   - 3*lambda) + 3*Ux(3)*v2*(Cv*mu - lambda) + 3*Ux(4)*lambda)/(Cv*rho)
 
              ! K2jUj(1) = 0
-             K2jUj(2) = mu*(-Ux(1)*v2 + Ux(3) - Uy(1)*v1 + Uy(2))/rho
+              K2jUj(2) = mu*(-Ux(1)*v2 + Ux(3) - Uy(1)*v1 + Uy(2))/rho
              K2jUj(3) = (2.0d0/3.0d0)*mu*(Ux(1)*v1 - Ux(2) - 2*Uy(1)*v2 + 2*Uy(3))/rho
              K2jUj(4) = (1.0d0/3.0d0)*(Cv*mu*(-Ux(1)*v1*v2 - 2*Ux(2)*v2 + 3*Ux(3)*v1) &
                   - Uy(1)*(Cv*mu*(3*V_sq + v2**2) - 3*lambda*(V_sq - e)) + 3*Uy(2)*v1*(Cv*mu &

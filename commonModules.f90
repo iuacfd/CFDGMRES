@@ -19,3 +19,12 @@ MODULE TIMERS
   real calcrhs_t, cuarto_t, output_t, masas_t, deriv_t, laplace_t, normales_t, forces_t, newmark_t, grad_t, transf_t, estab_t
   real spmv_t, residuo_t, fuente_t, total_t
 END MODULE TIMERS
+
+
+MODULE VARIMPLICIT
+  use MeshData, only:  npoin
+  integer*4, parameter :: im = 20 !size of krylov subspace
+  REAL(8), dimension(:), allocatable:: alu,sol,rhsimplicit
+  integer(4), dimension(:), allocatable:: jlu,ju
+  real (8) vv(npoin+1,im+1)
+END MODULE VARIMPLICIT
