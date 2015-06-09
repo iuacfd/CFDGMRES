@@ -39,20 +39,60 @@ contains
     !stop
   end subroutine getLocal
 
-  subroutine rhsvector(rhs_tmp,ipoi1,ipoi2,ipoi3)
+  subroutine lrhsvector(rhs_tmp,ipoi1,ipoi2,ipoi3)
     use PointNeighbor, only: esup2,esup3,esup4
-    !PARA PASAR DE RHS LOCAL A VECTOR DE RHS GLOBAL
+    !PARA PASAR DE LHS LOCAL A VECTOR DE LHS GLOBAL
     implicit none
-    real*8, dimension(4,3) :: rhs_tmp
-    do i=1,4
-       esup3(esup2(ipoi1)+esup4(ipoi1)+esup2(npoin+1)*(i-1))=rhs_tmp(i,ipoi1)
-       esup4(ipoi1)=esup4(ipoi1)+1     
-       esup3(esup2(ipoi2)+esup4(ipoi2)+esup2(npoin+1)*(i-1))=rhs_tmp(i,ipoi2)
-       esup4(ipoi2)=esup4(ipoi2)+1   
-       esup3(esup2(ipoi3)+esup4(ipoi3)+esup2(npoin+1)*(i-1))=rhs_tmp(i,ipoi3)
-       esup4(ipoi3)=esup4(ipoi3)+1   
+    real*8, dimension(12,12):: lhs
+    real*8, dimension(12):: rhs   
+    real*8, dimension(3):: nvector
+    nvector=(ipoi1,ipoi2,ipoi3)
+    do l=1,3
+       n=1
+       do k=3,0,-1
+          do j=1,3
+             m=1
+             do i=3,0,-1
+                esup3(nvector(j)*4-i,nvector(l)*4-k)=lhs(m+4*(j-1),n+4*(l-1))
+                m=m+1
+                n=n+1
+             end do
+          end do
+       end do
     end do
-  end subroutine rhsvector
+
+!!$ mkl_ddnscsrPARA PASAR DE MATRIZ COMPLETA A CSR (Compressed Sparse Row)
+!!$ https://software.intel.com/es-es/node/520848#0C4E7003-8C16-4403-94C1-86EC92CEDC2F
+!!$ Job: INTEGER Array, contains the following conversion parameters:
+!!$ job(1): Conversion type.
+!!$ If job(1)=0, the rectangular matrix A is converted to the CSR format;
+!!$ if job(1)=1, the rectangular matrix A is restored from the CSR format.
+!!$ job(2): index base for the rectangular matrix A.
+!!$ If job(2)=0, zero-based indexing for the rectangular matrix A is used;
+!!$ if job(2)=1, one-based indexing for the rectangular matrix A is used.
+!!$ job(3): Index base for the matrix in CSR format.
+!!$ If job(3)=0, zero-based indexing for the matrix in CSR format is used;
+!!$ if job(3)=1, one-based indexing for the matrix in CSR format is used.
+!!$ job(4): Portion of matrix.
+!!$ If job(4)=0, adns is a lower triangular part of matrix A;
+!!$ If job(4)=1, adns is an upper triangular part of matrix A;
+!!$ If job(4)=2, adns is a whole matrix A.
+!!$ job(5)=nzmax: maximum number of the non-zero elements allowed if job(1)=0.
+!!$ job(6): job indicator for conversion to CSR format.
+!!$ If job(6)=0, only array ia is generated for the output storage.
+!!$ If job(6)>0, arrays acsr, ia, ja are generated for the output storage.
+    job(1)=0; job(2)=1; job(3)=1; job(4)=2; job(5)=; job(6)=3
+
+    call mkl_ddnscsr(job, m, n, adns, lda, acsr, ja, ia, info)
+
+    esup3(esup2(ipoi1)+i+esup4(ipoi1)*4)=rhs_tmp(i,ipoi1)
+    esup4(ipoi1)=esup4(ipoi1)+1    
+    esup3(esup2(ipoi2)+esup4(ipoi2)+esup2(npoin+1)*(i-1))=rhs_tmp(i,ipoi2)
+    esup4(ipoi2)=esup4(ipoi2)+1   
+    esup3(esup2(ipoi3)+esup4(ipoi3)+esup2(npoin+1)*(i-1))=rhs_tmp(i,ipoi3)
+    esup4(ipoi3)=esup4(ipoi3)+1   
+
+  end subroutine lrhsvector
 
 
   subroutine intimpli
@@ -81,6 +121,7 @@ contains
   end subroutine intimpli
 
 subroutine setcondition
+use varimplicit, only: sol
 real(8) velocidadx(npoin),velocidady(npoin)
 
 

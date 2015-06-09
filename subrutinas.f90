@@ -717,52 +717,57 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
 !!$ LLAMADO A SUBRUTINA DE GMRES
 
      call intimpli
-!!!!!TAREAAAAAA!!!!! CREAR UN DO PARA PASAR DE SOL A U
-     u1(i,:)=sol(:)
 
-     !$OMP END PARALLEL DO
+!!!!!PASAR DE SOL A U1
 
-     !CCCC----------------------------------------------
-     !CCCC----> PASA A LA VARIABLE PRIMARIA PARA APLICAR
-     !CCCC----> LAS CONDICIONES DE CONTORNO								
-     !CCCC----------------------------------------------
+     do i=1,npoin
+        do k=1,4
+           u1(k,i)=sol(i+(k-1)*npoin)
+        end do
 
-     if(NGAS.EQ.1) GO TO 112
-     !$OMP PARALLEL DO PRIVATE(IPOIN, VEL2)
-     do ipoin = 1, npoin
-        RHO(ipoin) = U1(1,ipoin)
-        VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
-        VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
-        E(ipoin) = U1(4,ipoin)/RHO(ipoin)
-        VEL2 = (VEL_X(ipoin)**2 + VEL_Y(ipoin)**2)
-        P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
-        T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
-        RMACH(ipoin) = DSQRT(VEL2/(T(ipoin)*GAMM(ipoin)*FR))
-     end do
-     !$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
-112  CONTINUE
+        !CCCC----------------------------------------------
+        !CCCC----> PASA A LA VARIABLE PRIMARIA PARA APLICAR
+        !CCCC----> LAS CONDICIONES DE CONTORNO								
+        !CCCC----------------------------------------------
 
-     !CCCC----> CASO PARA AIRE EN EQUILIBRIO
-     !CCCC----------------------------------------------
-     if(NGAS.NE.0)THEN
+        if(NGAS.EQ.1) GO TO 112
+        !$OMP PARALLEL DO PRIVATE(IPOIN, VEL2)
         do ipoin = 1, npoin
            RHO(ipoin) = U1(1,ipoin)
-           E(ipoin) = U1(4,ipoin)/RHO(ipoin)
            VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
            VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
-           VEL2 = VEL_X(ipoin)**2.d0 + VEL_Y(ipoin)**2.d0
+           E(ipoin) = U1(4,ipoin)/RHO(ipoin)
+           VEL2 = (VEL_X(ipoin)**2 + VEL_Y(ipoin)**2)
            P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
            T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
-           if(IRK.EQ.NRK)THEN
-              call TGAS(E(ipoin)-.5d0*VEL2,RHO(ipoin),PGAS,AGAS,TGASi,GAMI)
-              GAMM(ipoin) = GAMI
-              P(ipoin) = PGAS
-              T(ipoin) = TGASi
-              RMACH(ipoin) = DSQRT(VEL2)/AGAS
-           end if
+           RMACH(ipoin) = DSQRT(VEL2/(T(ipoin)*GAMM(ipoin)*FR))
         end do
-     end if
+        !$OMP END PARALLEL DO
+
+112     CONTINUE
+
+        !CCCC----> CASO PARA AIRE EN EQUILIBRIO
+        !CCCC----------------------------------------------
+        if(NGAS.NE.0)THEN
+           do ipoin = 1, npoin
+              RHO(ipoin) = U1(1,ipoin)
+              E(ipoin) = U1(4,ipoin)/RHO(ipoin)
+              VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
+              VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
+              VEL2 = VEL_X(ipoin)**2.d0 + VEL_Y(ipoin)**2.d0
+              P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
+              T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
+              if(IRK.EQ.NRK)THEN
+                 call TGAS(E(ipoin)-.5d0*VEL2,RHO(ipoin),PGAS,AGAS,TGASi,GAMI)
+                 GAMM(ipoin) = GAMI
+                 P(ipoin) = PGAS
+                 T(ipoin) = TGASi
+                 RMACH(ipoin) = DSQRT(VEL2)/AGAS
+              end if
+           end do
+        end if
 
 
 !!$     !CCCC---------------------------------------CCCC
@@ -781,16 +786,25 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
 !!$     !CCCC-----------------------
 !!$     call FIX(FR,GAMM)
 
-     !$OMP PARALLEL DO PRIVATE(ipoin)
-     do ipoin = 1, npoin
-        U1(1,ipoin) = RHO(ipoin)
-        U1(2,ipoin) = VEL_X(ipoin)*RHO(ipoin)
-        U1(3,ipoin) = VEL_Y(ipoin)*RHO(ipoin)
-        U1(4,ipoin) = E(ipoin)*RHO(ipoin)
-     end do
-     !$OMP END PARALLEL DO
+        !$OMP PARALLEL DO PRIVATE(ipoin)
+        do ipoin = 1, npoin
+           U1(1,ipoin) = RHO(ipoin)
+           U1(2,ipoin) = VEL_X(ipoin)*RHO(ipoin)
+           U1(3,ipoin) = VEL_Y(ipoin)*RHO(ipoin)
+           U1(4,ipoin) = E(ipoin)*RHO(ipoin)
+        end do
+        !$OMP END PARALLEL DO
 
-  end do
+        !SETEAR CONVERGENCIA PARA PICARD
+        do ipoin = 1, npoin
+           U1(:, ipoin) =u1( U(:, ipoin) - rk_fact/M(ipoin)*RHS(:, ipoin)
+           converg1=
+           if (convergloc.lt.converg1) converg1=convergloc 
+        end do
+
+
+
+     end do
 
 !!$  if (BANDERA.EQ.2) THEN
 !!$     !$OMP PARALLEL DO PRIVATE(ipoin)
@@ -811,7 +825,7 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
 !!$     end do
 !!$     !$OMP END PARALLEL DO
 !!$  end if
-end subroutine RK
+   end subroutine RK
 
 subroutine ADAMSB(DTMIN, NESTAB, GAMM, dtl)
 	!use DATOS_REFINAMIENTO

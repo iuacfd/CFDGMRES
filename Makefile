@@ -1,6 +1,6 @@
 FC = ifort
 OMP = -openmp 
-FFLAGS = -fast -fpp $(OMP) #-fpe0 
+FFLAGS = -fast -fpp -intel -mkl  $(OMP) #-fpe0 
 LFLAGS = $(OMP)
 OBJECTS = commonModules.o dataLoader.o pointNeighbor.o implicit.o \
 		  mLaplace.o biconjGrad.o smoothing.o calcRHS.o \
