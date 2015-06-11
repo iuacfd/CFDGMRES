@@ -39,8 +39,81 @@ contains
     !stop
   end subroutine getLocal
 
+
+  subroutine esup4aux
+    !se llama en PointNeighbor.f90
+    use MeshData, only: npoin
+    use PointNeighbor, only: esup2,esup4        
+    integer(4) ipoin
+    !ESUP4 INDICE GLOBAL DE COLUMNAS
+    esup2=esup2+1 
+    esup4(1)=esup2(1)  
+    do ipoin=1,npoin    
+       factor=4*(esup2(ipoin+1)-esup2(ipoin))
+       esup4(ipoin*4-2) = esup4(ipoin*4-3) + factor
+       esup4(ipoin*4-1) = esup4(ipoin*4-2) + factor 
+       esup4(ipoin*4)   = esup4(ipoin*4-1) + factor 
+       esup4(ipoin*4+1) = esup4(ipoin*4)   + factor
+    end do
+  end subroutine esup4aux
+
+
+  subroutine esup3aux
+    !se llama en PointNeighbor.f90
+    use MeshData, only: npoin
+    use PointNeighbor, only: esup1,esup2,esup3        
+    integer(4) p,contador,contador1
+    p=0
+    contador =0
+    do ipoin=1,npoin
+       factor=(esup2(ipoin+1)-esup2(ipoin))
+       do i=1,4
+          do l= 1,factor
+             contador=contador+1
+             if (i.eq.1.and.l.eq.1) contador1=contador 
+             if (l.eq.1) contador=contador1
+             p=p+1
+             esup3(p) = esup1(contador)*4-3
+             p=p+1     
+             esup3(p) = esup1(contador)*4-2
+             p=p+1     
+             esup3(p) = esup1(contador)*4-1
+             p=p+1     
+             esup3(p) = esup1(contador)*4
+          end do
+       end do
+    end do
+  end subroutine esup3aux
+
+  subroutine esup5aux
+!!$    !Esup5 guarda las posiciones de los ipoi por elemento teniendo en cuenta los esup2. Sirve para pasar de la matriz local 12*12 a la matriz global.
+!!$    !se llama en PointNeighbor.f90
+    use PointNeighbor, only: esup2,esup5
+    use MeshData, only: inpoel, nelem
+    integer(4) ipoi(3)
+    integer(4)p,l,m,i,ielem
+    m=0
+    do ielem=1,nelem
+
+       ipoi(1)=inpoel(1,ielem); ipoi(2)=inpoel(2,ielem); ipoi(3)=inpoel(3,ielem)
+       do i=1,3     !barre nodos del elementos
+          do p=1,3  !barre nodos dentro de un nodo de esup2
+             do l=1,esup2(ipoi(i)+1)-esup2(ipoi(i))   !para buscar la posicion   
+                if (ipoi(p).eq.esup1(esup2(ipoi(i))+l-1)) then
+                   m=m+1
+                   esup5(m)=esup2(ipoi(i))+l-1
+                   exit
+                end if
+             end do
+          end do
+       end do
+    end do
+  end subroutine esup5aux
+
+
+
   subroutine lrhsvector(rhs_tmp,ipoi1,ipoi2,ipoi3)
-    use PointNeighbor, only: esup2,esup3,esup4
+    use PointNeighbor, only: esup2,esup3,esup4,esup5
     !PARA PASAR DE LHS LOCAL A VECTOR DE LHS GLOBAL
     implicit none
     real*8, dimension(12,12):: lhs
@@ -120,50 +193,50 @@ contains
     stop
   end subroutine intimpli
 
-subroutine setcondition
-use varimplicit, only: sol
-real(8) velocidadx(npoin),velocidady(npoin)
+  subroutine setcondition
+    use varimplicit, only: sol
+    real(8) velocidadx(npoin),velocidady(npoin)
 
 
-!SEPARA RHO*U y RHO*V
-do i=1,npoin
-velocidadx(i)=sol(i+npoin)/sol(i)
-velocidady(i)=sol(i+2*npoin)/sol(i)
-end do
+    !SEPARA RHO*U y RHO*V
+    do i=1,npoin
+       velocidadx(i)=sol(i+npoin)/sol(i)
+       velocidady(i)=sol(i+2*npoin)/sol(i)
+    end do
 
-     !SETEAR CONDICIONES DENTRO DEL PGMRES
-     !CCCC---------------------------------------CCCC
-     !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
-     !CCCC---------------------------------------CCCC
-     !CCCC----> VELOCIDADES IMPUESTAS
-     !CCCC---------------------------
-     call FIXVEL(velocidadx,velocidady)
+    !SETEAR CONDICIONES DENTRO DEL PGMRES
+    !CCCC---------------------------------------CCCC
+    !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
+    !CCCC---------------------------------------CCCC
+    !CCCC----> VELOCIDADES IMPUESTAS
+    !CCCC---------------------------
+    call FIXVEL(velocidadx,velocidady)
 
-     !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
-     !CCCC--------------------------------------------
-     call NORMALVEL(velocidadx,velocidady)
+    !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
+    !CCCC--------------------------------------------
+    call NORMALVEL(velocidadx,velocidady)
 
-     !CCCC----> VALORES IMPUESTOS
-     !CCCC-----------------------
-     call FIX(FR,GAMM,sol)
+    !CCCC----> VALORES IMPUESTOS
+    !CCCC-----------------------
+    call FIX(FR,GAMM,sol)
 
-!JUNTAR RHO*U y RHO*V
-do i=1,npoin
-sol(i+npoin)=velocidadx(i)*sol(i)
-sol(i+2*npoin)=velocidady(i)*sol(i)
-end do
+    !JUNTAR RHO*U y RHO*V
+    do i=1,npoin
+       sol(i+npoin)=velocidadx(i)*sol(i)
+       sol(i+2*npoin)=velocidady(i)*sol(i)
+    end do
 
 
-end subroutine setcondition
+  end subroutine setcondition
 
 
 !!$c-----------------------------------------------------------------------
-      subroutine pgmres(n, im, rhs, sol, vv, eps, maxits, iout,
-     *     aa, ja, ia, alu, jlu, ju, ierr)
+  subroutine pgmres(n, im, rhs, sol, vv, eps, maxits, iout,
+    *     aa, ja, ia, alu, jlu, ju, ierr)
 !!$c-----------------------------------------------------------------------
-      implicit real*8 (a-h,o-z)
-      integer n, im, maxits, iout, ierr, ja(*), ia(n+1) , jlu(*), ju(n)
-      real*8 vv(n,*), rhs(n), sol(n), aa(*), eps , alu(*)
+    implicit real*8 (a-h,o-z)
+    integer n, im, maxits, iout, ierr, ja(*), ia(n+1) , jlu(*), ju(n)
+    real*8 vv(n,*), rhs(n), sol(n), aa(*), eps , alu(*)
 !!$c----------------------------------------------------------------------*
 !!$c     *
 !!$c     *** ILUT - Preconditioned GMRES ***                  *
@@ -247,166 +320,166 @@ end subroutine setcondition
 !!$c     lusol : combined forward and backward solves (Preconditioning ope.) *
 !!$c     BLAS1  routines.                                                     *
 !!$c----------------------------------------------------------------------*
-      parameter (kmax=50)
-      real*8 hh(kmax+1,kmax), c(kmax), s(kmax), rs(kmax+1),t
+    parameter (kmax=50)
+    real*8 hh(kmax+1,kmax), c(kmax), s(kmax), rs(kmax+1),t
 !!$c-------------------------------------------------------------
 !!$c     arnoldi size should not exceed kmax=50 in this version..
 !!$c     to reset modify paramter kmax accordingly.
 !!$c-------------------------------------------------------------
-      data epsmac/1.d-16/
-      n1 = n + 1
-      its = 0
+    data epsmac/1.d-16/
+    n1 = n + 1
+    its = 0
 !!$c-------------------------------------------------------------
 !!$c     outer loop starts here..
 !!$c--------------compute initial residual vector --------------
-      call amux (n, sol, vv, aa, ja, ia)
-      do 21 j=1,n
-         vv(j,1) = rhs(j) - vv(j,1)
- 21   continue
+    call amux (n, sol, vv, aa, ja, ia)
+    do 21 j=1,n
+       vv(j,1) = rhs(j) - vv(j,1)
+21     continue
 !!$c-------------------------------------------------------------
- 20   ro = dnrm2(n, vv, 1)
-      if (iout .gt. 0 .and. its .eq. 0)
-     *     write(iout, 199) its, ro
-      if (ro .eq. 0.0d0) goto 999
-      t = 1.0d0/ ro
-      do 210 j=1, n
-         vv(j,1) = vv(j,1)*t
- 210  continue
-      if (its .eq. 0) eps1=eps*ro
+20     ro = dnrm2(n, vv, 1)
+       if (iout .gt. 0 .and. its .eq. 0)
+       *     write(iout, 199) its, ro
+       if (ro .eq. 0.0d0) goto 999
+       t = 1.0d0/ ro
+       do 210 j=1, n
+          vv(j,1) = vv(j,1)*t
+210       continue
+          if (its .eq. 0) eps1=eps*ro
 !!$c     ** initialize 1-st term  of rhs of hessenberg system..
-      rs(1) = ro
-      i = 0
- 4    i=i+1
-      its = its + 1
-      i1 = i + 1
-      call lusol (n, vv(1,i), rhs, alu, jlu, ju)
-      call amux (n, rhs, vv(1,i1), aa, ja, ia)
+          rs(1) = ro
+          i = 0
+4         i=i+1
+          its = its + 1
+          i1 = i + 1
+          call lusol (n, vv(1,i), rhs, alu, jlu, ju)
+          call amux (n, rhs, vv(1,i1), aa, ja, ia)
 !!$c-----------------------------------------
 !!$c     modified gram - schmidt...
 !!$c-----------------------------------------
-      do 55 j=1, i
-         t = ddot(n, vv(1,j),1,vv(1,i1),1)
-         hh(j,i) = t
-         call daxpy(n, -t, vv(1,j), 1, vv(1,i1), 1)
- 55   continue
-      t = dnrm2(n, vv(1,i1), 1)
-      hh(i1,i) = t
-      if ( t .eq. 0.0d0) goto 58
-      t = 1.0d0/t
-      do 57  k=1,n
-         vv(k,i1) = vv(k,i1)*t
- 57   continue
+          do 55 j=1, i
+             t = ddot(n, vv(1,j),1,vv(1,i1),1)
+             hh(j,i) = t
+             call daxpy(n, -t, vv(1,j), 1, vv(1,i1), 1)
+55           continue
+             t = dnrm2(n, vv(1,i1), 1)
+             hh(i1,i) = t
+             if ( t .eq. 0.0d0) goto 58
+             t = 1.0d0/t
+             do 57  k=1,n
+                vv(k,i1) = vv(k,i1)*t
+57              continue
 !!$c     
 !!$c     done with modified gram schimd and arnoldi step..
 !!$c     now  update factorization of hh
 !!$c     
- 58   if (i .eq. 1) goto 121
+58              if (i .eq. 1) goto 121
 !!$c--------perfrom previous transformations  on i-th column of h
-      do 66 k=2,i
-         k1 = k-1
-         t = hh(k1,i)
-         hh(k1,i) = c(k1)*t + s(k1)*hh(k,i)
-         hh(k,i) = -s(k1)*t + c(k1)*hh(k,i)
- 66   continue
- 121  gam = sqrt(hh(i,i)**2 + hh(i1,i)**2)
+                do 66 k=2,i
+                   k1 = k-1
+                   t = hh(k1,i)
+                   hh(k1,i) = c(k1)*t + s(k1)*hh(k,i)
+                   hh(k,i) = -s(k1)*t + c(k1)*hh(k,i)
+66                 continue
+121                gam = sqrt(hh(i,i)**2 + hh(i1,i)**2)
 !!$c     
 !!$c     if gamma is zero then any small value will do...
 !!$c     will affect only residual estimate
 !!$c     
-      if (gam .eq. 0.0d0) gam = epsmac
+                   if (gam .eq. 0.0d0) gam = epsmac
 !!$c     
 !!$c     get  next plane rotation
 !!$c     
-      c(i) = hh(i,i)/gam
-      s(i) = hh(i1,i)/gam
-      rs(i1) = -s(i)*rs(i)
-      rs(i) =  c(i)*rs(i)
+                   c(i) = hh(i,i)/gam
+                   s(i) = hh(i1,i)/gam
+                   rs(i1) = -s(i)*rs(i)
+                   rs(i) =  c(i)*rs(i)
 !!$c     
 !!$c     detrermine residual norm and test for convergence-
 !!$c     
-      hh(i,i) = c(i)*hh(i,i) + s(i)*hh(i1,i)
-      ro = abs(rs(i1))
- 131  format(1h ,2e14.4)
-      if (iout .gt. 0)  write(*, 199) its, ro
-      if (i .lt. im .and. (ro .gt. eps1))  goto 4
+                   hh(i,i) = c(i)*hh(i,i) + s(i)*hh(i1,i)
+                   ro = abs(rs(i1))
+131                format(1h ,2e14.4)
+                   if (iout .gt. 0)  write(*, 199) its, ro
+                   if (i .lt. im .and. (ro .gt. eps1))  goto 4
 !!$c     
 !!$c     now compute solution. first solve upper triangular system.
 !!$c     
-      rs(i) = rs(i)/hh(i,i)
-      do 30 ii=2,i
-         k=i-ii+1
-         k1 = k+1
-         t=rs(k)
-         do 40 j=k1,i
-            t = t-hh(k,j)*rs(j)
- 40      continue
-         rs(k) = t/hh(k,k)
- 30   continue
+                   rs(i) = rs(i)/hh(i,i)
+                   do 30 ii=2,i
+                      k=i-ii+1
+                      k1 = k+1
+                      t=rs(k)
+                      do 40 j=k1,i
+                         t = t-hh(k,j)*rs(j)
+40                       continue
+                         rs(k) = t/hh(k,k)
+30                       continue
 !!$c     
 !!$c     form linear combination of v(*,i)'s to get solution
 !!$c     
-      t = rs(1)
-      do 15 k=1, n
-         rhs(k) = vv(k,1)*t
- 15   continue
-      do 16 j=2, i
-         t = rs(j)
-         do 161 k=1, n
-            rhs(k) = rhs(k)+t*vv(k,j)
- 161     continue
- 16   continue
+                         t = rs(1)
+                         do 15 k=1, n
+                            rhs(k) = vv(k,1)*t
+15                          continue
+                            do 16 j=2, i
+                               t = rs(j)
+                               do 161 k=1, n
+                                  rhs(k) = rhs(k)+t*vv(k,j)
+161                               continue
+16                                continue
 !!$c     
 !!$c     call preconditioner.
 !!$c     
-             call lusol (n, rhs, rhs, alu, jlu, ju)
-             do 17 k=1, n
-             sol(k) = sol(k) + rhs(k) 
- 17    continue
+                                  call lusol (n, rhs, rhs, alu, jlu, ju)
+                                  do 17 k=1, n
+                                     sol(k) = sol(k) + rhs(k) 
+17                                   continue
 !!$c     
 !!$c     restart outer loop  when necessary
 !!$c     
 
-      call setcondition
-      if (ro .le. eps1) goto 990
-      if (its .ge. maxits) goto 991
+                                     call setcondition
+                                     if (ro .le. eps1) goto 990
+                                     if (its .ge. maxits) goto 991
 !!$c     
 !!$c     else compute residual vector and continue..
 !!$c     
-      do 24 j=1,i
-         jj = i1-j+1
-         rs(jj-1) = -s(jj-1)*rs(jj)
-         rs(jj) = c(jj-1)*rs(jj)
- 24   continue
-      do 25  j=1,i1
-         t = rs(j)
-         if (j .eq. 1)  t = t-1.0d0
-         call daxpy (n, t, vv(1,j), 1,  vv, 1)
- 25   continue
- 199  format('PGMRES its =', i4, ' res. norm =', d20.6)
+                                     do 24 j=1,i
+                                        jj = i1-j+1
+                                        rs(jj-1) = -s(jj-1)*rs(jj)
+                                        rs(jj) = c(jj-1)*rs(jj)
+24                                      continue
+                                        do 25  j=1,i1
+                                           t = rs(j)
+                                           if (j .eq. 1)  t = t-1.0d0
+                                           call daxpy (n, t, vv(1,j), 1,  vv, 1)
+25                                         continue
+199                                        format('PGMRES its =', i4, ' res. norm =', d20.6)
 !!$c     restart outer loop.
-      goto 20
- 990  ierr = 0
-      write(*, 199) its, ro
-      return
- 991  ierr = 1
-      return
- 999  continue
-      ierr = -1
-      return
+                                           goto 20
+990                                        ierr = 0
+                                           write(*, 199) its, ro
+                                           return
+991                                        ierr = 1
+                                           return
+999                                        continue
+                                           ierr = -1
+                                           return
 !!$c-----------------end of pgmres ---------------------------------------
 !!$c-----------------------------------------------------------------------
-      end
+                                        end do
 !!$c-----------------------------------------------------------------------
 
 
 
 !!$c----------------------------------------------------------------------c
-      subroutine ilut(n,a,ja,ia,lfil,droptol,alu,jlu,ju,iwk,w,jw,ierr)
+                                        subroutine ilut(n,a,ja,ia,lfil,droptol,alu,jlu,ju,iwk,w,jw,ierr)
 !!$c-----------------------------------------------------------------------
-      implicit none 
-      integer n
-      real*8 a(iwk),alu(iwk*15),w(n+1),droptol
-      integer ja(iwk),ia(n+1),jlu(iwk*15),ju(n),jw(2*n),lfil,iwk,ierr
+                                          implicit none 
+                                          integer n
+                                          real*8 a(iwk),alu(iwk*15),w(n+1),droptol
+                                          integer ja(iwk),ia(n+1),jlu(iwk*15),ju(n),jw(2*n),lfil,iwk,ierr
 !!$c----------------------------------------------------------------------*
 !!$c                      *** ILUT preconditioner ***                     *
 !!$c      incomplete LU factorization with dual truncation mechanism      *
@@ -490,274 +563,274 @@ end subroutine setcondition
 !!$c (however, fill-in is then mpredictible).                             *
 !!$c----------------------------------------------------------------------*
 !!$c     locals
-      integer ju0,k,j1,j2,j,ii,i,lenl,lenu,jj,jrow,jpos,len 
-      real*8 tnorm, t, abs, s, fact 
-      if (lfil .lt. 0) goto 998
+                                          integer ju0,k,j1,j2,j,ii,i,lenl,lenu,jj,jrow,jpos,len 
+                                          real*8 tnorm, t, abs, s, fact 
+                                          if (lfil .lt. 0) goto 998
 
 
-      
+
 !!$c-----------------------------------------------------------------------
 !!$c     initialize ju0 (points to next element to be added to alu,jlu)
 !!$c     and pointer array.
 !!$c-----------------------------------------------------------------------
-    
-      ju0 = n+2
-      jlu(1) = ju0
-           
+
+                                          ju0 = n+2
+                                          jlu(1) = ju0
+
 !!$c
 !!$c     initialize nonzero indicator array. 
 !!$c
-      do 1 j=1,n
-         jw(n+j)  = 0
- 1    continue
+                                          do 1 j=1,n
+                                             jw(n+j)  = 0
+1                                            continue
 !!$c-----------------------------------------------------------------------
 !!$c     beginning of main loop.
 !!$c-----------------------------------------------------------------------
-      do 500 ii = 1, n
-         j1 = ia(ii)
-         j2 = ia(ii+1) - 1
-         tnorm = 0.0d0
-         do 501 k=j1,j2
-            tnorm = tnorm+abs(a(k))
- 501     continue
-         if (tnorm .eq. 0.0) goto 999
-         tnorm = tnorm/real(j2-j1+1)
+                                             do 500 ii = 1, n
+                                                j1 = ia(ii)
+                                                j2 = ia(ii+1) - 1
+                                                tnorm = 0.0d0
+                                                do 501 k=j1,j2
+                                                   tnorm = tnorm+abs(a(k))
+501                                                continue
+                                                   if (tnorm .eq. 0.0) goto 999
+                                                   tnorm = tnorm/real(j2-j1+1)
 !!$c     
 !!$c     unpack L-part and U-part of row of A in arrays w 
 !!$c     
-        
-         lenu = 1
-         lenl = 0
-         jw(ii) = ii
-         w(ii) = 0.0
-         jw(n+ii) = ii
+
+                                                   lenu = 1
+                                                   lenl = 0
+                                                   jw(ii) = ii
+                                                   w(ii) = 0.0
+                                                   jw(n+ii) = ii
 !!$c
-         do 170  j = j1, j2
-            k = ja(j)
-            t = a(j)
-            if (k .lt. ii) then
-               lenl = lenl+1
-               jw(lenl) = k
-               w(lenl) = t
-               jw(n+k) = lenl
-            else if (k .eq. ii) then
-               w(ii) = t
-            else
-               lenu = lenu+1
-               jpos = ii+lenu-1 
-               jw(jpos) = k
-               w(jpos) = t
-               jw(n+k) = jpos
-            endif
- 170     continue
-         jj = 0
-         len = 0 
+                                                   do 170  j = j1, j2
+                                                      k = ja(j)
+                                                      t = a(j)
+                                                      if (k .lt. ii) then
+                                                         lenl = lenl+1
+                                                         jw(lenl) = k
+                                                         w(lenl) = t
+                                                         jw(n+k) = lenl
+                                                      else if (k .eq. ii) then
+                                                         w(ii) = t
+                                                      else
+                                                         lenu = lenu+1
+                                                         jpos = ii+lenu-1 
+                                                         jw(jpos) = k
+                                                         w(jpos) = t
+                                                         jw(n+k) = jpos
+                                                      endif
+170                                                   continue
+                                                      jj = 0
+                                                      len = 0 
 !!$c     
 !!$c     eliminate previous rows
 !!$c     
- 150     jj = jj+1
-         if (jj .gt. lenl) goto 160
+150                                                   jj = jj+1
+                                                      if (jj .gt. lenl) goto 160
 !!$c-----------------------------------------------------------------------
 !!$c     in order to do the elimination in the correct order we must select
 !!$c     the smallest column index among jw(k), k=jj+1, ..., lenl.
 !!$c-----------------------------------------------------------------------
-         jrow = jw(jj)
-         k = jj
+                                                      jrow = jw(jj)
+                                                      k = jj
 !!$c     
 !!$c     determine smallest column index
 !!$c     
-         do 151 j=jj+1,lenl
-            if (jw(j) .lt. jrow) then
-               jrow = jw(j)
-               k = j
-            endif
- 151     continue
+                                                      do 151 j=jj+1,lenl
+                                                         if (jw(j) .lt. jrow) then
+                                                            jrow = jw(j)
+                                                            k = j
+                                                         endif
+151                                                      continue
 !!$c
-         if (k .ne. jj) then
+                                                         if (k .ne. jj) then
 !!$c     exchange in jw
-            j = jw(jj)
-            jw(jj) = jw(k)
-            jw(k) = j
+                                                            j = jw(jj)
+                                                            jw(jj) = jw(k)
+                                                            jw(k) = j
 !!$c     exchange in jr
-            jw(n+jrow) = jj
-            jw(n+j) = k
+                                                            jw(n+jrow) = jj
+                                                            jw(n+j) = k
 !!$c     exchange in w
-            s = w(jj)
-            w(jj) = w(k)
-            w(k) = s
-         endif
+                                                            s = w(jj)
+                                                            w(jj) = w(k)
+                                                            w(k) = s
+                                                         endif
 !!$c
 !!$c     zero out element in row by setting jw(n+jrow) to zero.
 !!$c     
-         jw(n+jrow) = 0
+                                                         jw(n+jrow) = 0
 !!$c
 !!$c     get the multiplier for row to be eliminated (jrow).
 !!$c     
-         fact = w(jj)*alu(jrow)
-         if (abs(fact) .le. droptol) goto 150
+                                                         fact = w(jj)*alu(jrow)
+                                                         if (abs(fact) .le. droptol) goto 150
 !!$c     
 !!$c     combine current row and row jrow
 !!$c
-         do 203 k = ju(jrow), jlu(jrow+1)-1
-            s = fact*alu(k)
-            j = jlu(k)
-            jpos = jw(n+j)
-            if (j .ge. ii) then
+                                                         do 203 k = ju(jrow), jlu(jrow+1)-1
+                                                            s = fact*alu(k)
+                                                            j = jlu(k)
+                                                            jpos = jw(n+j)
+                                                            if (j .ge. ii) then
 !!$c     
 !!$c     dealing with upper part.
 !!$c     
-               if (jpos .eq. 0) then
+                                                               if (jpos .eq. 0) then
 !!$c
 !!$c     this is a fill-in element
 !!$c     
-                  lenu = lenu+1
-                  if (lenu .gt. n) goto 995
-                  i = ii+lenu-1
-                  jw(i) = j
-                  jw(n+j) = i
-                  w(i) = - s
-               else
+                                                                  lenu = lenu+1
+                                                                  if (lenu .gt. n) goto 995
+                                                                  i = ii+lenu-1
+                                                                  jw(i) = j
+                                                                  jw(n+j) = i
+                                                                  w(i) = - s
+                                                               else
 !!$c
 !!$c     this is not a fill-in element 
 !!$c
-                  w(jpos) = w(jpos) - s
+                                                                  w(jpos) = w(jpos) - s
 
-               endif
-            else
+                                                               endif
+                                                            else
 !!$c     
 !!$c     dealing  with lower part.
 !!$c     
-               if (jpos .eq. 0) then
+                                                               if (jpos .eq. 0) then
 !!$c
 !!$c     this is a fill-in element
 !!$c     
-                  lenl = lenl+1
-                  if (lenl .gt. n) goto 995
-                  jw(lenl) = j
-                  jw(n+j) = lenl
-                  w(lenl) = - s
-               else
+                                                                  lenl = lenl+1
+                                                                  if (lenl .gt. n) goto 995
+                                                                  jw(lenl) = j
+                                                                  jw(n+j) = lenl
+                                                                  w(lenl) = - s
+                                                               else
 !!$c     
 !!$c     this is not a fill-in element 
 !!$c     
-                  w(jpos) = w(jpos) - s
-               endif
-            endif
- 203     continue
+                                                                  w(jpos) = w(jpos) - s
+                                                               endif
+                                                            endif
+203                                                         continue
 !!$c     
 !!$c     store this pivot element -- (from left to right -- no danger of
 !!$c     overlap with the working elements in L (pivots). 
 !!$c     
-         len = len+1 
-         w(len) = fact
-         jw(len)  = jrow
-         goto 150
- 160     continue
+                                                            len = len+1 
+                                                            w(len) = fact
+                                                            jw(len)  = jrow
+                                                            goto 150
+160                                                         continue
 !!$c     
 !!$c     reset double-pointer to zero (U-part)
 !!$c     
-         do 308 k=1, lenu
-            jw(n+jw(ii+k-1)) = 0
- 308     continue
+                                                            do 308 k=1, lenu
+                                                               jw(n+jw(ii+k-1)) = 0
+308                                                            continue
 !!$c     
 !!$c     update L-matrix
 !!$c     
-         lenl = len 
-         len = min0(lenl,lfil)
+                                                               lenl = len 
+                                                               len = min0(lenl,lfil)
 !!$c     
 !!$c     sort by quick-split
 !!$c
-         call qsplit (w,jw,lenl,len)
+                                                               call qsplit (w,jw,lenl,len)
 !!$c
 !!$c     store L-part
 !!$c 
-         do 204 k=1, len 
-            if (ju0 .gt. iwk) goto 996
-            alu(ju0) =  w(k)
-            jlu(ju0) =  jw(k)
-            ju0 = ju0+1
- 204     continue
-          
+                                                               do 204 k=1, len 
+                                                                  if (ju0 .gt. iwk) goto 996
+                                                                  alu(ju0) =  w(k)
+                                                                  jlu(ju0) =  jw(k)
+                                                                  ju0 = ju0+1
+204                                                               continue
+
 !!$c     
 !!$c     save pointer to beginning of row ii of U
 !!$c     
-         ju(ii) = ju0
+                                                                  ju(ii) = ju0
 !!$c
 !!$c     update U-matrix -- first apply dropping strategy 
 !!$c
-         len = 0
-         do k=1, lenu-1
-            if (abs(w(ii+k)) .gt. droptol*tnorm) then 
-               len = len+1
-               w(ii+len) = w(ii+k) 
-               jw(ii+len) = jw(ii+k) 
-            endif
-         enddo
-         lenu = len+1
-         len = min0(lenu,lfil)
+                                                                  len = 0
+                                                                  do k=1, lenu-1
+                                                                     if (abs(w(ii+k)) .gt. droptol*tnorm) then 
+                                                                        len = len+1
+                                                                        w(ii+len) = w(ii+k) 
+                                                                        jw(ii+len) = jw(ii+k) 
+                                                                     endif
+                                                                  enddo
+                                                                  lenu = len+1
+                                                                  len = min0(lenu,lfil)
 !!$c
-         call qsplit (w(ii+1), jw(ii+1), lenu-1,len)
+                                                                  call qsplit (w(ii+1), jw(ii+1), lenu-1,len)
 !!$c
 !!$c     copy
 !!$c 
-         t = abs(w(ii))
-         if (len + ju0 .gt. iwk) goto 997
-         do 302 k=ii+1,ii+len-1 
-            jlu(ju0) = jw(k)
-            alu(ju0) = w(k)
-            t = t + abs(w(k) )
-            ju0 = ju0+1
- 302     continue
+                                                                  t = abs(w(ii))
+                                                                  if (len + ju0 .gt. iwk) goto 997
+                                                                  do 302 k=ii+1,ii+len-1 
+                                                                     jlu(ju0) = jw(k)
+                                                                     alu(ju0) = w(k)
+                                                                     t = t + abs(w(k) )
+                                                                     ju0 = ju0+1
+302                                                                  continue
 !!$c     
 !!$c     store inverse of diagonal element of u
 !!$c     
-         if (w(ii) .eq. 0.0) w(ii) = (0.0001 + droptol)*tnorm
+                                                                     if (w(ii) .eq. 0.0) w(ii) = (0.0001 + droptol)*tnorm
 !!$c     
-         alu(ii) = 1.0d0/ w(ii) 
+                                                                     alu(ii) = 1.0d0/ w(ii) 
 !!$c     
 !!$c     update pointer to beginning of next row of U.
 !!$c     
-         jlu(ii+1) = ju0
+                                                                     jlu(ii+1) = ju0
 !!$c-----------------------------------------------------------------------
 !!$c     end main loop
 !!$c-----------------------------------------------------------------------
- 500  continue
-      ierr = 0
-      return
+500                                                                  continue
+                                                                     ierr = 0
+                                                                     return
 !!$c
 !!$c     incomprehensible error. Matrix must be wrong.
 !!$c     
- 995  ierr = -1
-      return
+995                                                                  ierr = -1
+                                                                     return
 !!$c     
 !!$c     insufficient storage in L.
 !!$c     
- 996  ierr = -2
-      return
+996                                                                  ierr = -2
+                                                                     return
 !!$c     
 !!$c     insufficient storage in U.
 !!$c     
- 997  ierr = -3
-      return
+997                                                                  ierr = -3
+                                                                     return
 !!$c     
 !!$c     illegal lfil entered.
 !!$c     
- 998  ierr = -4
-      return
+998                                                                  ierr = -4
+                                                                     return
 !!$c     
 !!$c     zero row encountered
 !!$c     
- 999  ierr = -5
-      return
+999                                                                  ierr = -5
+                                                                     return
 !!$c----------------end-of-ilut--------------------------------------------
 !!$c-----------------------------------------------------------------------
-      end
+                                                                  end do
 !!$c----------------------------------------------------------------------
 
 
-      subroutine amux (n, x, y, a,ja,ia) 
-      real*8  x(*), y(*), a(*) 
-      integer n, ja(*), ia(*)
+                                                                  subroutine amux (n, x, y, a,ja,ia) 
+                                                                    real*8  x(*), y(*), a(*) 
+                                                                    integer n, ja(*), ia(*)
 !!$c-----------------------------------------------------------------------
 !!$c         A times a vector
 !!$c----------------------------------------------------------------------- 
@@ -779,33 +852,33 @@ end subroutine setcondition
 !!$c-----------------------------------------------------------------------
 !!$c local variables
 !!$c
-      real*8 t
-      integer i, k
+                                                                    real*8 t
+                                                                    integer i, k
 !!$c-----------------------------------------------------------------------
-      do 100 i = 1,n
+                                                                    do 100 i = 1,n
 !!$c
 !!$c     compute the inner product of row i with vector x
 !!$c 
-         t = 0.0d0
-         do 99 k=ia(i), ia(i+1)-1 
-            t = t + a(k)*x(ja(k))
- 99      continue
+                                                                       t = 0.0d0
+                                                                       do 99 k=ia(i), ia(i+1)-1 
+                                                                          t = t + a(k)*x(ja(k))
+99                                                                        continue
 !!$c
 !!$c     store result in y(i) 
 !!$c
-         y(i) = t
- 100  continue
+                                                                          y(i) = t
+100                                                                       continue
 !!$c
-      return
+                                                                          return
 !!$c---------end-of-amux---------------------------------------------------
 !!$c-----------------------------------------------------------------------
-      end
+                                                                       end do
 !!$c-----------------------------------------------------------------------
 
 
-	subroutine lusol(n, y, x, alu, jlu, ju)
-        real*8 x(n), y(n), alu(*)
-	integer n, jlu(*), ju(*)
+                                                                       subroutine lusol(n, y, x, alu, jlu, ju)
+                                                                         real*8 x(n), y(n), alu(*)
+                                                                         integer n, jlu(*), ju(*)
 !!$c-----------------------------------------------------------------------
 !!$c
 !!$c This routine solves the system (LU) x = y, 
@@ -829,37 +902,37 @@ end subroutine setcondition
 !!$c-----------------------------------------------------------------------
 !!$c local variables
 !!$c
-        integer i,k
+                                                                         integer i,k
 !!$c
 !!$c forward solve
 !!$c
-  
-        do 40 i = 1, n
-           x(i) = y(i)
-           do 41 k=jlu(i),ju(i)-1
-              x(i) = x(i) - alu(k)* x(jlu(k))
- 41        continue
- 40     continue
+
+                                                                         do 40 i = 1, n
+                                                                            x(i) = y(i)
+                                                                            do 41 k=jlu(i),ju(i)-1
+                                                                               x(i) = x(i) - alu(k)* x(jlu(k))
+41                                                                             continue
+40                                                                             continue
 !!$c
 !!$c     backward solve.
 !!$c
-	do 90 i = n, 1, -1
-	   do 91 k=ju(i),jlu(i+1)-1
-              x(i) = x(i) - alu(k)*x(jlu(k))
- 91	   continue
-           x(i) = alu(i)*x(i)
- 90     continue
+                                                                               do 90 i = n, 1, -1
+                                                                                  do 91 k=ju(i),jlu(i+1)-1
+                                                                                     x(i) = x(i) - alu(k)*x(jlu(k))
+91                                                                                   continue
+                                                                                     x(i) = alu(i)*x(i)
+90                                                                                   continue
 !!$c
-  	return
+                                                                                     return
 !!$c----------------end of lusol ------------------------------------------
 !!$c-----------------------------------------------------------------------
-	end
+                                                                                  end do
 !!$c-----------------------------------------------------------------------
 
 
-        subroutine qsplit(a,ind,n,ncut)
-        real*8 a(n)
-        integer ind(n), n, ncut
+                                                                                  subroutine qsplit(a,ind,n,ncut)
+                                                                                    real*8 a(n)
+                                                                                    integer ind(n), n, ncut
 !!$c-----------------------------------------------------------------------
 !!$c     does a quick-sort split of a real array.
 !!$c     on input a(1:n). is a real array
@@ -870,100 +943,100 @@ end subroutine setcondition
 !!$c
 !!$c     ind(1:n) is an integer array which permuted in the same way as a(*).
 !!$c-----------------------------------------------------------------------
-        real*8 tmp, abskey
-        integer itmp, first, last
+                                                                                    real*8 tmp, abskey
+                                                                                    integer itmp, first, last
 !!$c-----
-        first = 1
-        last = n
-        if (ncut .lt. first .or. ncut .gt. last) return
+                                                                                    first = 1
+                                                                                    last = n
+                                                                                    if (ncut .lt. first .or. ncut .gt. last) return
 !!$c
 !!$c     outer loop -- while mid .ne. ncut do
 !!$c
- 1      mid = first
-        abskey = abs(a(mid))
-        do 2 j=first+1, last
-           if (abs(a(j)) .gt. abskey) then
-              mid = mid+1
+1                                                                                   mid = first
+                                                                                    abskey = abs(a(mid))
+                                                                                    do 2 j=first+1, last
+                                                                                       if (abs(a(j)) .gt. abskey) then
+                                                                                          mid = mid+1
 !!$c     interchange
-              tmp = a(mid)
-              itmp = ind(mid)
-              a(mid) = a(j)
-              ind(mid) = ind(j)
-              a(j)  = tmp
-              ind(j) = itmp
-           endif
- 2      continue
+                                                                                          tmp = a(mid)
+                                                                                          itmp = ind(mid)
+                                                                                          a(mid) = a(j)
+                                                                                          ind(mid) = ind(j)
+                                                                                          a(j)  = tmp
+                                                                                          ind(j) = itmp
+                                                                                       endif
+2                                                                                      continue
 !!$c
 !!$c     interchange
 !!$c
-        tmp = a(mid)
-        a(mid) = a(first)
-        a(first)  = tmp
+                                                                                       tmp = a(mid)
+                                                                                       a(mid) = a(first)
+                                                                                       a(first)  = tmp
 !!$c
-        itmp = ind(mid)
-        ind(mid) = ind(first)
-        ind(first) = itmp
+                                                                                       itmp = ind(mid)
+                                                                                       ind(mid) = ind(first)
+                                                                                       ind(first) = itmp
 !!$c
 !!$c     test for while loop
 !!$c
-        if (mid .eq. ncut) return
-        if (mid .gt. ncut) then
-           last = mid-1
-        else
-           first = mid+1
-        endif
-        goto 1
+                                                                                       if (mid .eq. ncut) return
+                                                                                       if (mid .gt. ncut) then
+                                                                                          last = mid-1
+                                                                                       else
+                                                                                          first = mid+1
+                                                                                       endif
+                                                                                       goto 1
 !!$c----------------end-of-qsplit------------------------------------------
 !!$c-----------------------------------------------------------------------
-        end
+                                                                                    end do
 
-      subroutine daxpy(n,da,dx,incx,dy,incy)
+                                                                                    subroutine daxpy(n,da,dx,incx,dy,incy)
 !!$c
 !!$c     constant times a vector plus a vector.
 !!$c     uses unrolled loops for increments equal to one.
 !!$c     jack dongarra, linpack, 3/11/78.
 !!$c
-      double precision dx(*),dy(*),da
-      integer i,incx,incy,ix,iy,m,mp1,n
+                                                                                      double precision dx(*),dy(*),da
+                                                                                      integer i,incx,incy,ix,iy,m,mp1,n
 !!$c
-      if(n.le.0)return
-      if (da .eq. 0.0d0) return
-      if(incx.eq.1.and.incy.eq.1)go to 20
+                                                                                      if(n.le.0)return
+                                                                                      if (da .eq. 0.0d0) return
+                                                                                      if(incx.eq.1.and.incy.eq.1)go to 20
 !!$c
 !!$c        code for unequal increments or equal increments
 !!$c          not equal to 1
 !!$c
-      ix = 1
-      iy = 1
-      if(incx.lt.0)ix = (-n+1)*incx + 1
-      if(incy.lt.0)iy = (-n+1)*incy + 1
-      do 10 i = 1,n
-        dy(iy) = dy(iy) + da*dx(ix)
-        ix = ix + incx
-        iy = iy + incy
-   10 continue
-      return
+                                                                                      ix = 1
+                                                                                      iy = 1
+                                                                                      if(incx.lt.0)ix = (-n+1)*incx + 1
+                                                                                      if(incy.lt.0)iy = (-n+1)*incy + 1
+                                                                                      do 10 i = 1,n
+                                                                                         dy(iy) = dy(iy) + da*dx(ix)
+                                                                                         ix = ix + incx
+                                                                                         iy = iy + incy
+10                                                                                       continue
+                                                                                         return
 !!$c
 !!$c        code for both increments equal to 1
 !!$c
 !!$c
 !!$c        clean-up loop
 !!$c
-   20 m = mod(n,4)
-      if( m .eq. 0 ) go to 40
-      do 30 i = 1,m
-        dy(i) = dy(i) + da*dx(i)
-   30 continue
-      if( n .lt. 4 ) return
-   40 mp1 = m + 1
-      do 50 i = mp1,n,4
-        dy(i) = dy(i) + da*dx(i)
-        dy(i + 1) = dy(i + 1) + da*dx(i + 1)
-        dy(i + 2) = dy(i + 2) + da*dx(i + 2)
-        dy(i + 3) = dy(i + 3) + da*dx(i + 3)
-   50 continue
-      return
-      end
+20                                                                                       m = mod(n,4)
+                                                                                         if( m .eq. 0 ) go to 40
+                                                                                         do 30 i = 1,m
+                                                                                            dy(i) = dy(i) + da*dx(i)
+30                                                                                          continue
+                                                                                            if( n .lt. 4 ) return
+40                                                                                          mp1 = m + 1
+                                                                                            do 50 i = mp1,n,4
+                                                                                               dy(i) = dy(i) + da*dx(i)
+                                                                                               dy(i + 1) = dy(i + 1) + da*dx(i + 1)
+                                                                                               dy(i + 2) = dy(i + 2) + da*dx(i + 2)
+                                                                                               dy(i + 3) = dy(i + 3) + da*dx(i + 3)
+50                                                                                             continue
+                                                                                               return
+                                                                                            end do
 
 !!$c      double precision function dnrm2 ( n, dx, incx)
 !!$c      integer          next
@@ -1142,7 +1215,7 @@ end subroutine setcondition
 !!$c> \endverbatim
 !!$c>
 !!$c  =====================================================================
-       DOUBLE PRECISION FUNCTION dnrm2(N,X,INCX)
+                                                                                            DOUBLE PRECISION FUNCTION dnrm2(N,X,INCX)
 !!$c
 !!$c  -- Reference BLAS level1 routine (version 3.4.0) --
 !!$c  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
@@ -1150,105 +1223,105 @@ end subroutine setcondition
 !!$c     November 2011
 !!$c
 !!$c     .. Scalar Arguments ..
-       INTEGER incx,n
+                                                                                              INTEGER incx,n
 !!$c     ..
 !!$c     .. Array Arguments ..
-       DOUBLE PRECISION x(*)
+                                                                                              DOUBLE PRECISION x(*)
 !!$c     ..
 !!$c
 !!$c  =====================================================================
 !!$c
 !!$c     .. Parameters ..
-       DOUBLE PRECISION one,zero
-       parameter(one=1.0d+0,zero=0.0d+0)
+                                                                                              DOUBLE PRECISION one,zero
+                                                                                              parameter(one=1.0d+0,zero=0.0d+0)
 !!$c     ..
 !!$c     .. Local Scalars ..
-       DOUBLE PRECISION absxi,norm,scale,ssq
-       INTEGER ix
+                                                                                              DOUBLE PRECISION absxi,norm,scale,ssq
+                                                                                              INTEGER ix
 !!$c     ..
 !!$c     .. Intrinsic Functions ..
-       INTRINSIC abs,sqrt
+                                                                                              INTRINSIC abs,sqrt
 !!$c     ..
-       IF (n.LT.1 .OR. incx.LT.1) THEN
-           norm = zero
-       ELSE IF (n.EQ.1) THEN
-           norm = abs(x(1))
-       ELSE
-           scale = zero
-           ssq = one
+                                                                                              IF (n.LT.1 .OR. incx.LT.1) THEN
+                                                                                                 norm = zero
+                                                                                              ELSE IF (n.EQ.1) THEN
+                                                                                                 norm = abs(x(1))
+                                                                                              ELSE
+                                                                                                 scale = zero
+                                                                                                 ssq = one
 !!$c        The following loop is equivalent to this call to the LAPACK
 !!$c        auxiliary routine:
 !!$c        CALL DLASSQ( N, X, INCX, SCALE, SSQ )
 !!$c
-          DO 10 ix = 1,1 + (n-1)*incx,incx
-               IF (x(ix).NE.zero) THEN
-                   absxi = abs(x(ix))
-                   IF (scale.LT.absxi) THEN
-                       ssq = one + ssq* (scale/absxi)**2
-                       scale = absxi
-                   ELSE
-                       ssq = ssq + (absxi/scale)**2
-                   END IF
-               END IF
-10     CONTINUE
-           norm = scale*sqrt(ssq)
-       END IF
+                                                                                                 DO 10 ix = 1,1 + (n-1)*incx,incx
+                                                                                                    IF (x(ix).NE.zero) THEN
+                                                                                                       absxi = abs(x(ix))
+                                                                                                       IF (scale.LT.absxi) THEN
+                                                                                                          ssq = one + ssq* (scale/absxi)**2
+                                                                                                          scale = absxi
+                                                                                                       ELSE
+                                                                                                          ssq = ssq + (absxi/scale)**2
+                                                                                                       END IF
+                                                                                                    END IF
+10                                                                                                  CONTINUE
+                                                                                                    norm = scale*sqrt(ssq)
+                                                                                                 END IF
 !!$c
-       dnrm2 = norm
-       RETURN
+                                                                                                 dnrm2 = norm
+                                                                                                 RETURN
 !!$c
 !!$c     End of DNRM2.
 !!$c
-       END 
+                                                                                              END IF
 
 
-       double precision function ddot(n,dx,incx,dy,incy)
+                                                                                              double precision function ddot(n,dx,incx,dy,incy)
 !!$c
 !!$c     forms the dot product of two vectors.
 !!$c     uses unrolled loops for increments equal to one.
 !!$c     jack dongarra, linpack, 3/11/78.
 !!$c
-         double precision dx(*),dy(*),dtemp
-         integer i,incx,incy,ix,iy,m,mp1,n
+                                                                                                double precision dx(*),dy(*),dtemp
+                                                                                                integer i,incx,incy,ix,iy,m,mp1,n
 !!$c
-         ddot = 0.0d0
-         dtemp = 0.0d0
-         if(n.le.0)return
-         if(incx.eq.1.and.incy.eq.1)go to 20
+                                                                                                ddot = 0.0d0
+                                                                                                dtemp = 0.0d0
+                                                                                                if(n.le.0)return
+                                                                                                if(incx.eq.1.and.incy.eq.1)go to 20
 !!$c
 !!$c        code for unequal increments or equal increments
 !!$c          not equal to 1
 !!$c
-         ix = 1
-         iy = 1
-         if(incx.lt.0)ix = (-n+1)*incx + 1
-         if(incy.lt.0)iy = (-n+1)*incy + 1
-         do 10 i = 1,n
-            dtemp = dtemp + dx(ix)*dy(iy)
-            ix = ix + incx
-            iy = iy + incy
-10          continue
-            ddot = dtemp
-            return
+                                                                                                ix = 1
+                                                                                                iy = 1
+                                                                                                if(incx.lt.0)ix = (-n+1)*incx + 1
+                                                                                                if(incy.lt.0)iy = (-n+1)*incy + 1
+                                                                                                do 10 i = 1,n
+                                                                                                   dtemp = dtemp + dx(ix)*dy(iy)
+                                                                                                   ix = ix + incx
+                                                                                                   iy = iy + incy
+10                                                                                                 continue
+                                                                                                   ddot = dtemp
+                                                                                                   return
 !!$c
 !!$c        code for both increments equal to 1
 !!$c
 !!$c
 !!$c        clean-up loop
 !!$c
-20          m = mod(n,5)
-            if( m .eq. 0 ) go to 40
-            do 30 i = 1,m
-               dtemp = dtemp + dx(i)*dy(i)
-30             continue
-               if( n .lt. 5 ) go to 60
-40             mp1 = m + 1
-               do 50 i = mp1,n,5
-                  dtemp = dtemp + dx(i)*dy(i) + dx(i + 1)*dy(i + 1) +
-                  *   dx(i + 2)*dy(i + 2) + dx(i + 3)*dy(i + 3) + dx(i + 4)*dy(i + 4)
-50                continue
-60                ddot = dtemp
-                  return
-               end do
+20                                                                                                 m = mod(n,5)
+                                                                                                   if( m .eq. 0 ) go to 40
+                                                                                                   do 30 i = 1,m
+                                                                                                      dtemp = dtemp + dx(i)*dy(i)
+30                                                                                                    continue
+                                                                                                      if( n .lt. 5 ) go to 60
+40                                                                                                    mp1 = m + 1
+                                                                                                      do 50 i = mp1,n,5
+                                                                                                         dtemp = dtemp + dx(i)*dy(i) + dx(i + 1)*dy(i + 1) +
+                                                                                                         *   dx(i + 2)*dy(i + 2) + dx(i + 3)*dy(i + 3) + dx(i + 4)*dy(i + 4)
+50                                                                                                       continue
+60                                                                                                       ddot = dtemp
+                                                                                                         return
+                                                                                                      end do
 
-             end module implicit
+                                                                                                    end module implicit

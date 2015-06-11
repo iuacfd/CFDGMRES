@@ -1,9 +1,10 @@
 module PointNeighbor
-  integer, dimension(:), allocatable :: esup1, esup2,esup3,esup4,esup2l,esup1l
+  integer, dimension(:), allocatable :: esup1, esup2,esup3,esup4,esup5,esup6,esup2l,esup1l
   integer, dimension(:), allocatable :: psup1, psup2, lpoin
   
 contains
   subroutine getEsup(inpoel,nelem,npoin)
+    use implicit
     implicit none
     integer istor
     integer nelem, npoin
@@ -25,7 +26,12 @@ contains
        esup2(ipoin) = esup2(ipoin) + esup2(ipoin-1)
     end do
 
-    allocate(esup1(esup2(npoin+1)),esup3(esup2(npoin+1)*4),esup4(esup2(npoin+1))) 
+    allocate(esup1(esup2(npoin+1)),esup4((npoin*4+1)) 
+    call esup4aux
+    allocate (esup3((esup4(npoin*4+1)-esup4(1))*4),esup5(9*nelem))
+    allocate(esup6(size(esup3,1)))
+
+
     allocate(esup2l((npoin+1)*4),esup1l(esup2(npoin+1)*4)
     !obtener el array esup1 de los elementos vecinos
     do ielem=1,nelem
@@ -37,6 +43,8 @@ contains
        end do
     end do
 
+    call esup3aux
+
     !restaurar esup2
     do ipoin=npoin+1,2,-1
        esup2(ipoin) = esup2(ipoin-1)
@@ -47,6 +55,8 @@ contains
        esup2l(1+(n+1)*(i-1):(n+1)*i)=esup2
        esup1l(1+n*(i-1):n*i)=esup1
     end do
+
+    call esup5aux
 
   end subroutine getEsup
 
