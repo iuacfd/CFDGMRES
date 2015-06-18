@@ -19,7 +19,7 @@ PROGRAM NSComp2D
   use MeshMove
   use smoothing_mod
   use implicit
-  
+  use varimplicit, only: sol,uold
 
   implicit real(8) (A-H, O-Z)
 
@@ -132,16 +132,19 @@ PROGRAM NSComp2D
   !CCCC----> DEFINO VELOCIDAD DE LA MALLA
   W_X = 0.d0
   W_Y = 0.d0
-  
-  IMOOTH = 0
 
+  IMOOTH = 0
+  !SETEAR EL INICIO DEL VECTOR SOL PARA IMPLICITO
+  sol=0.d0
+  allocate(uold(4,npoin))
+  uold=0.d0
   write(*, '(A, I3, A)') '****-------> RUNGE-KUTTA DE', NRK, '  ORDEN <-------****'
   write(*, *)''
 
   !CCCC----> ABRE EL ARCHIVO DONDE SE IMPRIMEN LOS RESULTADOS ********************
   if (MOVIE.EQ.1) open(2, FILE=trim(filename)//'.flavia.res', STATUS='UNKNOWN')
   WRITE(2,'(A/)') 'Gid Post Results File 1.0'
-  
+
   WRITE(2,'(A)') 'GaussPoints "Tri1" ElemType Triangle'
   WRITE(2,'(A,I2)') 'Number Of Gauss Points:',1 
   WRITE(2,'(A)') 'Natural Coordinates: internal'
@@ -153,8 +156,8 @@ PROGRAM NSComp2D
 
   call setNewmarkCondition
   OPEN(17,FILE='DESPLAZAMIENTO',STATUS='UNKNOWN')
-Do while (time.le.1.d0)  
-!Do While (ITER.LT.MAXITER.AND.ISAL.EQ.0)
+  Do while (time.le.1.d0)  
+     !Do While (ITER.LT.MAXITER.AND.ISAL.EQ.0)
 
      ITER = ITER + 1
 
@@ -190,11 +193,11 @@ Do while (time.le.1.d0)
      end do
      !$OMP END PARALLEL DO
 
-     if (BANDERA.LE.4) THEN
-        call RK(DTMIN, NRK, BANDERA, GAMM, dtl)
-     else
-       call ADAMSB(DTMIN, NESTAB, GAMM, dtl)
-    end if
+     !if (BANDERA.LE.4) THEN
+     call RK(DTMIN, NRK, BANDERA, GAMM, dtl)
+     !else
+     !   call ADAMSB(DTMIN, NESTAB, GAMM, dtl)
+     !end if
 
      If(Moving==1)then
         call fluidStructure(dtmin,time,SMOOTH_FIX,x1,y1)
@@ -289,7 +292,7 @@ Do while (time.le.1.d0)
         end do
         close(33)
 
-         !call PRINTREST(ITER, U, T, GAMM, TIME, filename,x1,y1)
+        !call PRINTREST(ITER, U, T, GAMM, TIME, filename,x1,y1)
 
      end if
 

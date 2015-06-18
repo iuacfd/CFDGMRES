@@ -1,8 +1,8 @@
- module calcRHS_mod
-	implicit none
+module calcRHS_mod
+  implicit none
 contains
-  subroutine calcRHS(rhs, U, theta, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin)
-    use InputData, only: Cv => FCV, lambda_ref => FK, mu_ref => FMU, gamma0 => gama, T_inf, cte
+  subroutine calcRHS(U, theta, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin,uold)
+    use InputData, only: FCV, FK, mu_ref => FMU, gamm => gama, T_inf, cte,fr
     use Mvariables, only: T
     real*8, parameter, dimension(3,3) :: N = &
          reshape((/&
@@ -12,16 +12,51 @@ contains
          /), (/3,3/))
 
 
+    real*8, dimension(3) ::RNx, RNy
+    integer(4) ipoi1,ipoi2,ipoi3,inpoel,nelem,npoin,ngauss,ielem
+    real(8) gama,gm,temp,dnx(3,nelem),dny(3,nelem),uold(4,npoin),uold1(12),u(4,npoin),theta(4,npoin)
+    real*8, intent(in), dimension(nelem) :: area, dtl, shoc, t_sugn1, t_sugn2, t_sugn3
+    real(8) FMU1, FMU43, FMU23, RU1,rho,vx,vy,et,rmod2,tau1,tau2,tau3,alfa_mu,nn(8,12),fmu
+    real(8) A1_21, A1_22, A1_23, A1_24, A1_31, A1_32, A1_33, A1_41, A1_42, A1_43, A1_44
+    real(8) A2_21, A2_22, A2_23, A2_31, A2_32, A2_33, A2_34, A2_41, A2_42, A2_43, A2_44
+    real*8, dimension(4) :: U_k, theta_k
+    real(8) RKMAT(8,8),kdN(8,12),dNtkdN(12,12),ar,arr1,arr2,arr3,AdN(4,12),solestab(12,12),nt(12,4)
+    real(8) SolNtAdN(12,12),soldNtdN(12,12),SolNtN(12,12),LHS(12,12),dNAtheta(12),NtNUold(12),rhs(12)
+    real*8, dimension(3) :: EAUXA12, EAUXA13, EAUXA21, EAUXA22, EAUXA23, EAUXA24
+    real*8, dimension(3) :: EAUXA31, EAUXA32, EAUXA33, EAUXA34, EAUXA41, EAUXA42, EAUXA43, EAUXA44
+    integer(4) i,j,l,m
+    real(8) choq
+    rkmat=0.d0
+    KdN=0.d0
+    dNtKdN=0.d0
+    AdN=0.d0
+    solestab=0.d0
+    Nt=0.d0
+    solNtAdN=0.d0
+    soldNtdN=0.d0
+    solNtN=0.d0
+    dNAtheta=0.d0
+    NtNUold=0.d0
+    LHS=0.d0
+    RHS=0.d0
+    nn=0.d0
     NGAUSS=3    !PTOS DE GAUSS DONDE VOY A INTEGRAR
 
     DO IELEM=1,NELEM
+       ipoi1 = inpoel(1,ielem)
+       ipoi2 = inpoel(2,ielem)
+       ipoi3 = inpoel(3,ielem)
+       !N1=N(1,IELEM) ; N2=N(2,IELEM) ; N3=N(3,IELEM)
+       do i =1,3       
+          do j=1,4
+             uold1(j+(i-1)*4)=uold(j,inpoel(i,ielem))
+          end do
+       end do
 
-       N1=N(1,IELEM) ; N2=N(2,IELEM) ; N3=N(3,IELEM)
-
-       GAMA=(GAMM(N1)+GAMM(N2)+GAMM(N3))/3.D0
+       GAMA=gamm!(GAMM(ipoi1)+GAMM(ipoi2)+GAMM(ipoi3))/3.D0
        GM=GAMA-1.D0
-       TEMP=(T(N1)+T(N2)+T(N3))/3.D0
-       ! FMU= 1.716d-5*162.6/(TEMP-110.55)*(TEMP/273.15)**.75D0     !SUTHERLAND
+       TEMP=(T(ipoi1)+T(ipoi2)+T(ipoi3))/3.D0
+       FMU= mu_ref!1.716d-5*162.6/(TEMP-110.55)*(TEMP/273.15)**.75D0     !SUTHERLAND
 
        ! RNX1=DNX(1,IELEM) ; RNX2=DNX(2,IELEM) ; RNX3=DNX(3,IELEM)
        ! RNY1=DNY(1,IELEM) ; RNY2=DNY(2,IELEM) ; RNY3=DNY(3,IELEM)
@@ -43,29 +78,29 @@ contains
 
           !CCCC  ----> INTEGRO LAS VARIABLES EN LOS PUNTOS DE GAUSS
           U_k(1:4) = &
-               N(1,k)*U(1:4,ipoi1) +&
-               N(2,k)*U(1:4,ipoi2) +&
-               N(3,k)*U(1:4,ipoi3)
+               N(1,j)*U(1:4,ipoi1) +&
+               N(2,j)*U(1:4,ipoi2) +&
+               N(3,j)*U(1:4,ipoi3)
           theta_k(1:4) = &
-               N(1,k)*theta(1:4,ipoi1) +&
-               N(2,k)*theta(1:4,ipoi2) +&
-               N(3,k)*theta(1:4,ipoi3)
+               N(1,j)*theta(1:4,ipoi1) +&
+               N(2,j)*theta(1:4,ipoi2) +&
+               N(3,j)*theta(1:4,ipoi3)
           !CCCC  ----> DEFINO VARIABLES PRIMITIVAS
           rho = U_k(1)
           vx = U_k(2)/rho
           vy = U_k(3)/rho
           et = U_k(4)/rho
-          rmod2 = v1**2 + v2**2
+          rmod2 = vx**2 + vy**2
 
           TEMP=GM/FR*(ET-.5D0*RMOD2) !FR=CTE. UNIVERSAL DE LOS GASES
 
-          C=DSQRT(GAMA*FR*TEMP)
+          !         C=DSQRT(GAMA*FR*TEMP)
 
           !CCCC  ----> VARIABLES COMPACTAS
           FMU1=FMU-(FK/FCV)   ! FK=CONDUCTIVIDAD TERMICA; FCV=CALOR ESPECIFICO A VOL. CTE
           FMU43=4.D0/3.D0*FMU ! FMU=VISCOSIDAD
           FMU23=2.D0/3.D0*FMU
-          RU1=1.d0/U1           ! RU1= FACTOR COMUN DEL JACOBIANO DE LAS MATRICES K
+          RU1=1.d0/U_k(1)          ! RU1= FACTOR COMUN DEL JACOBIANO DE LAS MATRICES K
 
           !CCCC  ----> DEFINICION DE LAS MATRICES A1 Y A2
 
@@ -112,8 +147,8 @@ contains
              RKMAT(8,7)=(FMU/3.D0+FMU1)*VY ; RKMAT(8,8)=FK/FCV
              !dgemm= ver https://software.intel.com/es-es/node/520775#AE8380B9-CAC8-4C57-9AF3-2EAAC6ACFC1B
              !Primero calculo rkmat*dn y eso da kdn y luego hago dnt*kdn
-             call dgemm('n','n',8,12,8,1.d0,RKMAT,8,nn,8,1.d0,kdn,8)
-             call dgemm('t','n',12,12,8,1.d0,nn,8,kdn,12,1.d0,dntkdn,12)
+             call dgemm('n','n',8,12,8,1.d0,RKMAT,8,nn,8,1.d0,kdN,8)
+             call dgemm('t','n',12,12,8,1.d0,nn,8,kdN,12,1.d0,dNtkdN,12)
 
           END IF
 
@@ -126,8 +161,6 @@ contains
           !CCCC  ----> Captura de Choque
 
           CHOQ=alfa_mu*CTE!*ar 
-          !CHOQ2=alfa_mu*AR*CTE 
-          !CHOQ3=alfa_mu*AR*CTE 
           !CCCC----------------------------------------------------------------------------------------------------
           !CCCC---->************************************<----!CCCC 
           !CCCC---->  CALCULO DE MUa Y SUS COMPONENTES  <----!CCCC
@@ -216,15 +249,7 @@ contains
           end do
 
           !CCCC  ----> Nt*N
-          do l=1,4
-             do m=1,3
-
-                solNtN(l+(m-1)*4,l)   = N(1,j)*N(m,j) 
-                solNtN(l+(m-1)*4,4+l) = N(2,j)*N(m,j) 
-                solNtN(l+(m-1)*4,8+l) = N(3,j)*N(m,j) 
-
-             end do
-          end do
+          call dgemm('n','t',12,12,4,1.d0,nt,12,nt,12,0.d0,SolNtN,12 )
 
           !SUMA DE TODOS LOS TERMINOS
           LHS=LHS+solNtN*AREA(IELEM)/3.D0+AR*(SolNtAdN+soldNtdN*CHOQ+dntkdn*ru1+Solestab)
@@ -234,16 +259,18 @@ contains
           !!TRANSPONE AdN y lo multiplica por el vector Theta_k (theta integrados en el elemento)
           call dgemv('t', 4, 12, 1.d0, AdN, 4,theta_k , 1, 1.d0, dNAtheta, 1)
           !CALCULA NtN*Uviejo (da como resultado un vector)
-          call dgemv('n', 12, 12, 1.d0, solNtN, 4,Uold , 1, 1.d0, NtNUold, 1)
+          call dgemv('n', 12, 12, 1.d0, solNtN, 4,Uold1 , 1, 1.d0, NtNUold, 1)
 
           do i=1,3
              RHS(1+4*(i-1))= RHS(1+4*(i-1))+NtNUold(1+4*(i-1))*AREA(IELEM)/3.D0+AR*dNAtheta(1+4*(i-1))*tau1
-             RHS(2+4*(i-1))= RHS(2+4*(i-1))+NtNUold(1+4*(2-1))*AREA(IELEM)/3.D0+AR*dNAtheta(2+4*(i-1))*tau2
-             RHS(3+4*(i-1))= RHS(3+4*(i-1))+NtNUold(1+4*(3-1))*AREA(IELEM)/3.D0+AR*dNAtheta(3+4*(i-1))*tau2
-             RHS(4+4*(i-1))= RHS(4+4*(i-1))+NtNUold(1+4*(4-1))*AREA(IELEM)/3.D0+AR*dNAtheta(4+4*(i-1))*tau3
+             RHS(2+4*(i-1))= RHS(2+4*(i-1))+NtNUold(2+4*(i-1))*AREA(IELEM)/3.D0+AR*dNAtheta(2+4*(i-1))*tau2
+             RHS(3+4*(i-1))= RHS(3+4*(i-1))+NtNUold(3+4*(i-1))*AREA(IELEM)/3.D0+AR*dNAtheta(3+4*(i-1))*tau2
+             RHS(4+4*(i-1))= RHS(4+4*(i-1))+NtNUold(4+4*(i-1))*AREA(IELEM)/3.D0+AR*dNAtheta(4+4*(i-1))*tau3
           end do
        END DO
 
        call lrhsvector(lhs,rhs,ipoi1,ipoi2,ipoi3)
 
     END DO
+  end subroutine calcRHS
+end module calcRHS_mod

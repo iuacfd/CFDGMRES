@@ -22,9 +22,9 @@ END MODULE TIMERS
 
 
 MODULE VARIMPLICIT
-  use MeshData, only:  npoin
   integer*4, parameter :: im = 20 !size of krylov subspace
-  REAL(8), dimension(:), allocatable:: alu,sol,rhsimplicit
+  REAL(8), dimension(:), allocatable:: alu,sol!se alloca en RK en subrutinas.f90
   integer(4), dimension(:), allocatable:: jlu,ju
-  real (8) vv(npoin+1,im+1)
+  real(8), dimension(:,:), allocatable:: vv
+  real(8), allocatable :: uold (:,:)
 END MODULE VARIMPLICIT

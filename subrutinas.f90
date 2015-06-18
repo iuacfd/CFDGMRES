@@ -66,7 +66,7 @@ contains
  subroutine normalvel(velocidadx,velocidady)
    !use mallocar
    !use mnormales
-   !use meshdata
+   use meshdata, only : npoin
    use mvelocidades
    implicit none
    integer i, ipoin 
@@ -623,31 +623,32 @@ subroutine fixvel(velocidadx,velocidady)
   !$OMP END PARALLEL DO
 end subroutine FIXVEL
 
-subroutine FIX(FR,GAMM,sol)
-	!use MALLOCAR
-	!use MVARIABFIX
-	use MVELOCIDADES
-	use MVARIABLES
-	use MeshData
-	implicit real(8) (A-H,O-Z)
-	real(8) GAMM(npoin)
+subroutine FIX(FR,GAMM,velocidadx,velocidady)
+  !use MALLOCAR
+  !use MVARIABFIX
+ ! use MVELOCIDADES
+  use MVARIABLES
+  use MeshData
+  use VARIMPLICIT, only : sol
+  implicit real(8) (A-H,O-Z)
+  real(8) GAMM(npoin)
+  real(8) velocidadx(npoin),velocidady(npoin)
+  !$OMP PARALLEL
+  !$OMP DO PRIVATE(i)
+  do i = 1, nfixrho
+     sol((ifixrho_node(i)-1)*4+1) = rfixrho_value(i)
+  end do
+  !$OMP END DO
 
-	!$OMP PARALLEL
-	!$OMP DO PRIVATE(i)
-	do i = 1, nfixrho
-	sol(ifixrho_node(i)) = rfixrho_value(i)
-	end do
-	!$OMP END DO
-
-	!$OMP DO PRIVATE(i, j, GM)
-	do i = 1, NFIXT
-	j = IFIXT_NODE(i)
-	GM = GAMM(j) - 1.d0
-	T(j) = RFIXT_VALUE(i)
-	sol(j+npoin*3) = T(j)*FR/GM + .5d0*(VELocidadX(j)**2 + VELocidadY(j)**2)
-	end do
-	!$OMP END DO
-	!$OMP END PARALLEL
+  !$OMP DO PRIVATE(i, j, GM)
+  do i = 1, NFIXT
+     j = IFIXT_NODE(i)
+     GM = GAMM(j) - 1.d0
+     T(j) = RFIXT_VALUE(i)
+     sol((j)*4) = T(j)*FR/GM + .5d0*(VELocidadX(j)**2 + VELocidadY(j)**2)
+  end do
+  !$OMP END DO
+  !$OMP END PARALLEL
 end subroutine FIX
 
 subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
@@ -669,20 +670,26 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
   use TIMERS
   use PointNeighbor, only: esup1,esup2,esup3,esup4
   use varimplicit
+  use implicit
   implicit real(8)(A-H,O-Z)
-  integer BANDERA
+  integer BANDERA,dataval
   real(8) GAMM(npoin)
-  real(8) dtl(nelem),esup3local(esup2(npoin+1))
-
+  real(8) dtl(nelem)
+  !save uold
+  !if (.not. allocated(uold)) allocate(uold(4,npoin))
+  ! dataval=npoin*4
+  ! DATA ((uold(I,J), I=1,4), J=1,npoin) /dataval*0./ 
   ! do IRK = 1,NRK
   !RK_FACT = 1.d0/(NRK + 1 - IRK)
 
-  allocate (alu(esup2(npoin+1)*100),sol(npoin*4),rhsimplicit(npoin*4),jlu(esup2(npoin+1)*100),ju((npoin+1)*4))
+  allocate (alu(esup2(npoin+1)*400),sol(npoin*4),jlu(esup2(npoin+1)*400),ju((npoin)*4),vv(npoin*4,im+1))
   jlu=0
   ju=0
   alu=0.d0
   vv=0.d0
-  DO !Setear tolerancia para picard o max numero de iteraciones
+  DO while (converg1.gt.epsilon.or.niteracion.lt.200) 
+
+     !Setear tolerancia para picard o max numero de iteraciones
 
 
 
@@ -695,11 +702,11 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
 
      !$OMP PARALLEL DO PRIVATE(ipoin)
      do ipoin = 1, npoin
-	RHS(:, ipoin) = 0.d0
+        RHS(:, ipoin) = 0.d0
      end do
      !$OMP END PARALLEL DO
 
-     timer( calcRHS(rhs, U1, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin), calcrhs_t)
+     timer( ncalcRHS( U1, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin), calcrhs_t)
      ! timer(calcRHS(U, UN, RHS, P, RMU, dtl, gamm), calcrhs_t)
      ! call rhs_diffusive&
      ! (rhs, U, dnx, dny, area, dtl, T, gamm, fr, fmu, fk, fcv, T_inf, inpoel, npoin, nelem)
@@ -722,52 +729,52 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
 
      do i=1,npoin
         do k=1,4
-           u1(k,i)=sol(i+(k-1)*npoin)
+           u1(k,i)=sol((i-1)*4+k)
         end do
+     end do
+     !$OMP END PARALLEL DO
 
-        !$OMP END PARALLEL DO
+     !CCCC----------------------------------------------
+     !CCCC----> PASA A LA VARIABLE PRIMARIA PARA APLICAR
+     !CCCC----> LAS CONDICIONES DE CONTORNO								
+     !CCCC----------------------------------------------
 
-        !CCCC----------------------------------------------
-        !CCCC----> PASA A LA VARIABLE PRIMARIA PARA APLICAR
-        !CCCC----> LAS CONDICIONES DE CONTORNO								
-        !CCCC----------------------------------------------
+     if(NGAS.EQ.1) GO TO 112
+     !$OMP PARALLEL DO PRIVATE(IPOIN, VEL2)
+     do ipoin = 1, npoin
+        RHO(ipoin) = U1(1,ipoin)
+        VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
+        VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
+        E(ipoin) = U1(4,ipoin)/RHO(ipoin)
+        VEL2 = (VEL_X(ipoin)**2 + VEL_Y(ipoin)**2)
+        P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
+        T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
+        RMACH(ipoin) = DSQRT(VEL2/(T(ipoin)*GAMM(ipoin)*FR))
+     end do
+     !$OMP END PARALLEL DO
 
-        if(NGAS.EQ.1) GO TO 112
-        !$OMP PARALLEL DO PRIVATE(IPOIN, VEL2)
+112  CONTINUE
+
+     !CCCC----> CASO PARA AIRE EN EQUILIBRIO
+     !CCCC----------------------------------------------
+     if(NGAS.NE.0)THEN
         do ipoin = 1, npoin
            RHO(ipoin) = U1(1,ipoin)
+           E(ipoin) = U1(4,ipoin)/RHO(ipoin)
            VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
            VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
-           E(ipoin) = U1(4,ipoin)/RHO(ipoin)
-           VEL2 = (VEL_X(ipoin)**2 + VEL_Y(ipoin)**2)
+           VEL2 = VEL_X(ipoin)**2.d0 + VEL_Y(ipoin)**2.d0
            P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
            T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
-           RMACH(ipoin) = DSQRT(VEL2/(T(ipoin)*GAMM(ipoin)*FR))
+           if(IRK.EQ.NRK)THEN
+              call TGAS(E(ipoin)-.5d0*VEL2,RHO(ipoin),PGAS,AGAS,TGASi,GAMI)
+              GAMM(ipoin) = GAMI
+              P(ipoin) = PGAS
+              T(ipoin) = TGASi
+              RMACH(ipoin) = DSQRT(VEL2)/AGAS
+           end if
         end do
-        !$OMP END PARALLEL DO
-
-112     CONTINUE
-
-        !CCCC----> CASO PARA AIRE EN EQUILIBRIO
-        !CCCC----------------------------------------------
-        if(NGAS.NE.0)THEN
-           do ipoin = 1, npoin
-              RHO(ipoin) = U1(1,ipoin)
-              E(ipoin) = U1(4,ipoin)/RHO(ipoin)
-              VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
-              VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
-              VEL2 = VEL_X(ipoin)**2.d0 + VEL_Y(ipoin)**2.d0
-              P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
-              T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
-              if(IRK.EQ.NRK)THEN
-                 call TGAS(E(ipoin)-.5d0*VEL2,RHO(ipoin),PGAS,AGAS,TGASi,GAMI)
-                 GAMM(ipoin) = GAMI
-                 P(ipoin) = PGAS
-                 T(ipoin) = TGASi
-                 RMACH(ipoin) = DSQRT(VEL2)/AGAS
-              end if
-           end do
-        end if
+     end if
 
 
 !!$     !CCCC---------------------------------------CCCC
@@ -786,46 +793,26 @@ subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
 !!$     !CCCC-----------------------
 !!$     call FIX(FR,GAMM)
 
-        !$OMP PARALLEL DO PRIVATE(ipoin)
-        do ipoin = 1, npoin
-           U1(1,ipoin) = RHO(ipoin)
-           U1(2,ipoin) = VEL_X(ipoin)*RHO(ipoin)
-           U1(3,ipoin) = VEL_Y(ipoin)*RHO(ipoin)
-           U1(4,ipoin) = E(ipoin)*RHO(ipoin)
-        end do
-        !$OMP END PARALLEL DO
-
-        !SETEAR CONVERGENCIA PARA PICARD
-        do ipoin = 1, npoin
-           U1(:, ipoin) =u1( U(:, ipoin) - rk_fact/M(ipoin)*RHS(:, ipoin)
-           converg1=
-           if (convergloc.lt.converg1) converg1=convergloc 
-        end do
-
-
-
+     !$OMP PARALLEL DO PRIVATE(ipoin)
+     do ipoin = 1, npoin
+        U1(1,ipoin) = RHO(ipoin)
+        U1(2,ipoin) = VEL_X(ipoin)*RHO(ipoin)
+        U1(3,ipoin) = VEL_Y(ipoin)*RHO(ipoin)
+        U1(4,ipoin) = E(ipoin)*RHO(ipoin)
      end do
+     !$OMP END PARALLEL DO
 
-!!$  if (BANDERA.EQ.2) THEN
-!!$     !$OMP PARALLEL DO PRIVATE(ipoin)
-!!$     do ipoin = 1, npoin
-!!$        RHS3(:,ipoin) = RHS(:,ipoin)
-!!$     end do
-!!$     !$OMP END PARALLEL DO
-!!$  else if(BANDERA.EQ.3) THEN
-!!$     !$OMP PARALLEL DO PRIVATE(ipoin)
-!!$     do ipoin = 1, npoin
-!!$        RHS2(:,ipoin) = RHS(:,ipoin)
-!!$     end do
-!!$     !$OMP END PARALLEL DO
-!!$  else if(BANDERA.EQ.4) THEN
-!!$     !$OMP PARALLEL DO PRIVATE(ipoin)
-!!$     do ipoin = 1, npoin
-!!$        RHS1(:,ipoin) = RHS(:,ipoin)
-!!$     end do
-!!$     !$OMP END PARALLEL DO
-!!$  end if
-   end subroutine RK
+     !SETEAR CONVERGENCIA PARA PICARD
+     do ipoin = 1, npoin
+        convergloc=convergloc+(u1(4,ipoin)-ukold(4,ipoin))**2.d0
+        converg=converg+(u1(4,ipoin))**2.d0
+     end do
+     converg1=dsqrt(convergloc/converg)
+  end do
+
+  uold=u1
+
+end subroutine RK
 
 subroutine ADAMSB(DTMIN, NESTAB, GAMM, dtl)
 	!use DATOS_REFINAMIENTO
@@ -859,7 +846,7 @@ subroutine ADAMSB(DTMIN, NESTAB, GAMM, dtl)
 	end do
 	!$OMP END PARALLEL DO
 
-	timer( calcRHS(rhs, U, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin), calcrhs_t)
+!	timer( calcRHS(rhs, U, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin), calcrhs_t)
 	! timer(calcRHS(U, UN, RHS, P, RMU, dtl, gamm), calcrhs_t)
 	! call rhs_diffusive&
 	! (rhs, U, dnx, dny, area, dtl, T, gamm, fr, fmu, fk, fcv, T_inf, inpoel, npoin, nelem)
@@ -929,15 +916,15 @@ subroutine ADAMSB(DTMIN, NESTAB, GAMM, dtl)
 
 	!CCCC----> VELOCIDADES IMPUESTAS
 	!CCCC---------------------------
-	call FIXVEL
+!	call FIXVEL
 
 	!CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
 	!CCCC--------------------------------------------
-	call NORMALVEL
+!	call NORMALVEL
 
 	!CCCC----> VALORES IMPUESTOS
 	!CCCC-----------------------
-	call FIX(FR,GAMM)
+!	call FIX(FR,GAMM)
 
 	!$OMP PARALLEL DO PRIVATE(ipoin)
 	do ipoin = 1, npoin

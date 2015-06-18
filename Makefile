@@ -1,9 +1,9 @@
 FC = ifort
 OMP = -openmp 
-FFLAGS = -fast -fpp -intel -mkl  $(OMP) #-fpe0 
-LFLAGS = $(OMP)
-OBJECTS = commonModules.o dataLoader.o pointNeighbor.o implicit.o \
-		  mLaplace.o biconjGrad.o smoothing.o calcRHS.o \
+FFLAGS = -fpp  -mkl  $(OMP) -fpe0 -fast
+LFLAGS = $(OMP) -mkl
+OBJECTS = commonModules.o dataLoader.o pointNeighbor.o implicit.o  \
+		  mLaplace.o biconjGrad.o smoothing.o ncalcRHS.o \
 		  subrutinas.o meshMove.o ns2DComp.ALE.o 
 
 .PHONY: clean
@@ -17,7 +17,7 @@ mkl: FFLAGS += -mkl
 mkl: LFLAGS =+ -mkl
 mkl: ns
 
-debug: FFLAGS = -O0 -fpp $(OMP) -check -traceback -warn nounused
+debug: FFLAGS = -O0 -fpp $(OMP) -check -traceback -warn nounused -mkl
 debug: ns
 
 idb: FFLAGS = -debug -O0 -fpp $(OMP)
