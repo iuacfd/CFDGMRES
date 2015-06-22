@@ -58,6 +58,7 @@ contains
                N(1,k)*theta(1:4,ipoi1) +&
                N(2,k)*theta(1:4,ipoi2) +&
                N(3,k)*theta(1:4,ipoi3)
+
           rho = U_k(1)
           v1 = U_k(2)/rho
           v2 = U_k(3)/rho

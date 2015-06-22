@@ -47,7 +47,7 @@ PROGRAM NSComp2D
   call readInputData
   !Lee archivo filename.dat
   call loadMeshData
-
+ALLOCATE (sol(npoin*4))
   ALLOCATE(SMOOTH_SIM(2, npoin))
   ALLOCATE(GAMM(npoin), DTL(NELEM), DT(NELEM))
   ALLOCATE(HH_NEW(npoin), SMOOTH_FIX(npoin),x1(npoin),y1(npoin))
@@ -86,7 +86,7 @@ PROGRAM NSComp2D
 !!$  end do
 
   !call smoothing(X, Y, inpoel, smooth_fix, npoin, nelem, .95d0)
-  call CallAll
+ ! call CallAll
   if(NGAS.NE.1) GAMM = GAMA
 
   !CCCC-----> CALCULO DE LOS NODOS CON PERIODICIDAD

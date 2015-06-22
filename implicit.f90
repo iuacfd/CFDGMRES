@@ -2,42 +2,42 @@ module implicit
 !!!NO INDEXARRRRRRRRR. SE MUEVE TODO LO QUE ESTA EN FORTRAN 77
 contains
 
-  subroutine CallAll
-    use PointNeighbor
-    use MeshData, only: inpoel, nelem, npoin
-    implicit none
-    call getEsup(inpoel,nelem,npoin)
-    call getLocal
-  end subroutine CallAll
+!!$  subroutine CallAll
+!!$    use PointNeighbor
+!!$    use MeshData, only: inpoel, nelem, npoin
+!!$    implicit none
+!!$    call getEsup(inpoel,nelem,npoin)
+!!$    call getLocal
+!!$  end subroutine CallAll
 
 
-  subroutine getLocal
-    use PointNeighbor, only: esup2, esup1
-    use MeshData, only: inpoel, nelem, npoin
-    implicit none
-    integer, dimension(:), allocatable :: lnum1
-    integer ipoin, ielem, iesup, jpoin, i
+!!$  subroutine getLocal
+!!$    use PointNeighbor, only: esup2, esup1
+!!$    use MeshData, only: inpoel, nelem, npoin
+!!$    implicit none
+!!$    integer, dimension(:), allocatable :: lnum1
+!!$    integer ipoin, ielem, iesup, jpoin, i
 
 
-    !Armar vector con las posiciones locales en un elemento del nodo i
-    allocate(lnum1(esup2(npoin+1)))
-    do ipoin=1,npoin
-       do iesup=esup2(ipoin)+1, esup2(ipoin+1)
-          ielem=esup1(iesup)
-          do i=1,3
-             jpoin=inpoel(i,ielem)
-             if(jpoin==ipoin) then
-                lnum1(iesup)=i
-             end if
-          enddo
-       end do
-    end do
-
-    !do i=1, esup2(npoin+1)
-    !   print*,esup1(i),lnum1(i)
-    !end do
-    !stop
-  end subroutine getLocal
+!!$    !Armar vector con las posiciones locales en un elemento del nodo i
+!!$    allocate(lnum1(esup2(npoin+1)))
+!!$    do ipoin=1,npoin
+!!$       do iesup=esup2(ipoin)+1, esup2(ipoin+1)
+!!$          ielem=esup1(iesup)
+!!$          do i=1,3
+!!$             jpoin=inpoel(i,ielem)
+!!$             if(jpoin==ipoin) then
+!!$                lnum1(iesup)=i
+!!$             end if
+!!$          enddo
+!!$       end do
+!!$    end do
+!!$
+!!$    do i=1, esup2(npoin+1)
+!!$       print*,esup1(i),lnum1(i)
+!!$    end do
+!!$    stop
+!!$  end subroutine getLocal
 
 
 !!$  subroutine esup4aux
@@ -112,46 +112,46 @@ contains
 
 
 
-  subroutine lrhsvector(lhs,rhs,ipoi1,ipoi2,ipoi3)
-    use PointNeighbor, only: esup2,esup4,esup5,esup6,esup7
-    !PARA PASAR DE LHS LOCAL A VECTOR DE LHS GLOBAL
-    !ESUP6 GUARDA LOS VALORES DEL LHS EN FORMA DE VECTOR
-    implicit none
-    real*8, dimension(12,12):: lhs
-    real*8, dimension(12):: rhs   
-    integer*4, dimension(3):: nvector
-    integer(4) orden,indices(9),indcolum1,indcolum,i,j,k,ielem
-    integer(4) ipoi1,ipoi2,ipoi3
-
-    nvector=(/ ipoi1,ipoi2,ipoi3 /)
-
-    do ielem=1,3
-       do i=1,9
-          indices(i)=esup5((nvector(ielem)-1)*9+i)
-       end do
-
-       do i=1,3
-          indcolum1=esup2(nvector(i))-esup2(1)
-          indcolum=esup2(nvector(i)+1)-esup2(nvector(i))
-          do j=1,4
-             do k=1,3
-                orden=indcolum1*16+(j-1)*indcolum*4+(indices(k+(i-1)*3)-esup2(nvector(i)))*4
-                esup6(orden+1) = lhs((i-1)*4+j,k*4-3)
-                esup6(orden+2) = lhs((i-1)*4+j,k*4-2)
-                esup6(orden+3) = lhs((i-1)*4+j,k*4-1)         
-                esup6(orden+4) = lhs((i-1)*4+j,k*4)        
-             end do
-          end do
-       end do
-    end do
-    !ESUP 7 GUARDA EN UN VECTOR LOS VALORES DEL RHS
-    do i=1,3
-       do j=1,4
-          esup7(nvector(i-1)*4+j)=rhs(j+(i-1)*4)
-       end do
-    end do
-
-  end subroutine lrhsvector
+!!$  subroutine lrhsvector(lhs,rhs,ipoi1,ipoi2,ipoi3)
+!!$    use PointNeighbor, only: esup2,esup4,esup5,esup6,esup7
+!!$    !PARA PASAR DE LHS LOCAL A VECTOR DE LHS GLOBAL
+!!$    !ESUP6 GUARDA LOS VALORES DEL LHS EN FORMA DE VECTOR
+!!$    implicit none
+!!$    real*8, dimension(12,12):: lhs
+!!$    real*8, dimension(12):: rhs   
+!!$    integer*4, dimension(3):: nvector
+!!$    integer(4) orden,indices(9),indcolum1,indcolum,i,j,k,ielem
+!!$    integer(4) ipoi1,ipoi2,ipoi3
+!!$
+!!$    nvector=(/ ipoi1,ipoi2,ipoi3 /)
+!!$
+!!$    do ielem=1,3
+!!$       do i=1,9
+!!$          indices(i)=esup5((nvector(ielem)-1)*9+i)
+!!$       end do
+!!$
+!!$       do i=1,3
+!!$          indcolum1=esup2(nvector(i))-esup2(1)
+!!$          indcolum=esup2(nvector(i)+1)-esup2(nvector(i))
+!!$          do j=1,4
+!!$             do k=1,3
+!!$                orden=indcolum1*16+(j-1)*indcolum*4+(indices(k+(i-1)*3)-esup2(nvector(i)))*4
+!!$                esup6(orden+1) = lhs((i-1)*4+j,k*4-3)
+!!$                esup6(orden+2) = lhs((i-1)*4+j,k*4-2)
+!!$                esup6(orden+3) = lhs((i-1)*4+j,k*4-1)         
+!!$                esup6(orden+4) = lhs((i-1)*4+j,k*4)        
+!!$             end do
+!!$          end do
+!!$       end do
+!!$    end do
+!!$    !ESUP 7 GUARDA EN UN VECTOR LOS VALORES DEL RHS
+!!$    do i=1,3
+!!$       do j=1,4
+!!$          esup7(nvector(i-1)*4+j)=rhs(j+(i-1)*4)
+!!$       end do
+!!$    end do
+!!$
+!!$  end subroutine lrhsvector
 
 
   subroutine intimpli
@@ -169,7 +169,7 @@ contains
     nz_num = (esup4(npoin*4+1)-esup4(1))
     eps=1.D-8
     maxits=100	
-    iout=0
+    iout=1
     lfil=npoin*80
     droptol=1d-3
     iwk=n*40
@@ -179,7 +179,7 @@ contains
 
     if (ierr.ne.0) then
        print*, "PROBLEMA DE ILUT:", ierr
-       stop
+      ! stop
     end if
 
     call pgmres(n, im, esup7, sol, vv, eps, maxits, iout, esup6, esup3, esup4, alu, jlu, ju, ierr)
@@ -191,41 +191,42 @@ contains
 
   end subroutine intimpli
 
-  subroutine setcondition
-    use varimplicit, only: sol
-    use MeshData, only: npoin 
-    real(8) velocidadx(npoin),velocidady(npoin)
-
-
-    !SEPARA RHO*U y RHO*V
-    do i=1,npoin
-       velocidadx(i)=sol((i-1)*4+2)/sol((i-1)*4+1)
-       velocidady(i)=sol((i-1)*4+3)/sol((i-1)*4+1)
-    end do
-
-    !SETEAR CONDICIONES DENTRO DEL PGMRES
-    !CCCC---------------------------------------CCCC
-    !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
-    !CCCC---------------------------------------CCCC
-    !CCCC----> VELOCIDADES IMPUESTAS
-    !CCCC---------------------------
-    call FIXVEL(velocidadx,velocidady)
-
-    !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
-    !CCCC--------------------------------------------
-    call NORMALVEL(velocidadx,velocidady)
-
-    !CCCC----> VALORES IMPUESTOS
-    !CCCC-----------------------
-    call FIX(FR,GAMM,velocidadx,velocidady)
-
-    !JUNTAR RHO*U y RHO*V
-    do i=1,npoin
-       sol((i-1)*4+2)=velocidadx(i)*sol((i-1)*4+1)
-       sol((i-1)*4+3)=velocidady(i)*sol((i-1)*4+1)
-    end do
-
-  end subroutine setcondition
+!!$  subroutine setcondition
+!!$    use varimplicit, only: sol
+!!$    use MeshData, only: npoin 
+!!$    use Mnormales
+!!$    real(8) velocidadx(npoin),velocidady(npoin)
+!!$
+!!$
+!!$    !SEPARA RHO*U y RHO*V
+!!$    do i=1,npoin
+!!$       velocidadx(i)=sol((i-1)*4+2)/sol((i-1)*4+1)
+!!$       velocidady(i)=sol((i-1)*4+3)/sol((i-1)*4+1)
+!!$    end do
+!!$
+!!$    !SETEAR CONDICIONES DENTRO DEL PGMRES
+!!$    !CCCC---------------------------------------CCCC
+!!$    !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
+!!$    !CCCC---------------------------------------CCCC
+!!$    !CCCC----> VELOCIDADES IMPUESTAS
+!!$    !CCCC---------------------------
+!!$    call FIXVEL(velocidadx,velocidady)
+!!$
+!!$    !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
+!!$    !CCCC--------------------------------------------
+!!$    call NORMALVEL(velocidadx,velocidady)
+!!$
+!!$    !CCCC----> VALORES IMPUESTOS
+!!$    !CCCC-----------------------
+!!$    call FIX(FR,GAMM,velocidadx,velocidady)
+!!$
+!!$    !JUNTAR RHO*U y RHO*V
+!!$    do i=1,npoin
+!!$       sol((i-1)*4+2)=velocidadx(i)*sol((i-1)*4+1)
+!!$       sol((i-1)*4+3)=velocidady(i)*sol((i-1)*4+1)
+!!$    end do
+!!$
+!!$  end subroutine setcondition
 
 
 !!$c-----------------------------------------------------------------------

@@ -1,7 +1,8 @@
 module calcRHS_mod
   implicit none
 contains
-  subroutine calcRHS(U, theta, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, inpoel, nelem, npoin,uold)
+  subroutine ncalcRHS(U, theta, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, nelem, npoin,uold)
+    use Meshdata, only: inpoel
     use InputData, only: FCV, FK, mu_ref => FMU, gamm => gama, T_inf, cte,fr
     use Mvariables, only: T
     real*8, parameter, dimension(3,3) :: N = &
@@ -13,7 +14,7 @@ contains
 
 
     real*8, dimension(3) ::RNx, RNy
-    integer(4) ipoi1,ipoi2,ipoi3,inpoel,nelem,npoin,ngauss,ielem
+    integer(4) ipoi1,ipoi2,ipoi3,nelem,npoin,ngauss,ielem
     real(8) gama,gm,temp,dnx(3,nelem),dny(3,nelem),uold(4,npoin),uold1(12),u(4,npoin),theta(4,npoin)
     real*8, intent(in), dimension(nelem) :: area, dtl, shoc, t_sugn1, t_sugn2, t_sugn3
     real(8) FMU1, FMU43, FMU23, RU1,rho,vx,vy,et,rmod2,tau1,tau2,tau3,alfa_mu,nn(8,12),fmu
@@ -37,12 +38,13 @@ contains
     solNtN=0.d0
     dNAtheta=0.d0
     NtNUold=0.d0
-    LHS=0.d0
-    RHS=0.d0
+
     nn=0.d0
     NGAUSS=3    !PTOS DE GAUSS DONDE VOY A INTEGRAR
 
     DO IELEM=1,NELEM
+       LHS=0.d0
+       RHS=0.d0
        ipoi1 = inpoel(1,ielem)
        ipoi2 = inpoel(2,ielem)
        ipoi3 = inpoel(3,ielem)
@@ -85,6 +87,7 @@ contains
                N(1,j)*theta(1:4,ipoi1) +&
                N(2,j)*theta(1:4,ipoi2) +&
                N(3,j)*theta(1:4,ipoi3)
+
           !CCCC  ----> DEFINO VARIABLES PRIMITIVAS
           rho = U_k(1)
           vx = U_k(2)/rho
@@ -161,6 +164,7 @@ contains
           !CCCC  ----> Captura de Choque
 
           CHOQ=alfa_mu*CTE!*ar 
+         
           !CCCC----------------------------------------------------------------------------------------------------
           !CCCC---->************************************<----!CCCC 
           !CCCC---->  CALCULO DE MUa Y SUS COMPONENTES  <----!CCCC
@@ -257,20 +261,71 @@ contains
           !CALCULAR RHS QUE ES NT*N*U VIEJO+DELTAT*tau*dNt*Ai*TITA (VECTOR)
 
           !!TRANSPONE AdN y lo multiplica por el vector Theta_k (theta integrados en el elemento)
+          !print*,size(adn),size(theta_k),size(solntn),size(uold)
           call dgemv('t', 4, 12, 1.d0, AdN, 4,theta_k , 1, 1.d0, dNAtheta, 1)
+!print*,theta_k
           !CALCULA NtN*Uviejo (da como resultado un vector)
-          call dgemv('n', 12, 12, 1.d0, solNtN, 4,Uold1 , 1, 1.d0, NtNUold, 1)
+          call dgemv('n', 12, 12, 1.d0, solNtN, 12,Uold1 , 1, 1.d0, NtNUold, 1)
 
           do i=1,3
              RHS(1+4*(i-1))= RHS(1+4*(i-1))+NtNUold(1+4*(i-1))*AREA(IELEM)/3.D0+AR*dNAtheta(1+4*(i-1))*tau1
              RHS(2+4*(i-1))= RHS(2+4*(i-1))+NtNUold(2+4*(i-1))*AREA(IELEM)/3.D0+AR*dNAtheta(2+4*(i-1))*tau2
              RHS(3+4*(i-1))= RHS(3+4*(i-1))+NtNUold(3+4*(i-1))*AREA(IELEM)/3.D0+AR*dNAtheta(3+4*(i-1))*tau2
              RHS(4+4*(i-1))= RHS(4+4*(i-1))+NtNUold(4+4*(i-1))*AREA(IELEM)/3.D0+AR*dNAtheta(4+4*(i-1))*tau3
+
           end do
        END DO
-
-       call lrhsvector(lhs,rhs,ipoi1,ipoi2,ipoi3)
+      
+!stop
+       call lrhsvector(lhs,rhs,ipoi1,ipoi2,ipoi3,ielem)
 
     END DO
-  end subroutine calcRHS
+  end subroutine ncalcRHS
+!!$
+  subroutine lrhsvector(lhs,rhs,ipoi1,ipoi2,ipoi3,ielem)
+    use PointNeighbor, only: esup2,esup4,esup5,esup6,esup7
+    !PARA PASAR DE LHS LOCAL A VECTOR DE LHS GLOBAL
+    !ESUP6 GUARDA LOS VALORES DEL LHS EN FORMA DE VECTOR
+    implicit none
+    real*8, dimension(12,12):: lhs
+    real*8, dimension(12):: rhs   
+    integer*4, dimension(3):: nvector
+    integer(4) orden,indices(9),indcolum1,indcolum,i,j,k,ielem
+    integer(4) ipoi1,ipoi2,ipoi3
+    esup6=0.d0
+    esup7=0.d0
+    nvector=(/ ipoi1,ipoi2,ipoi3 /)
+
+    !do ielem=1,3
+    do i=1,9
+
+
+       indices(i)=esup5((ielem-1)*9+i)
+    end do
+
+    do i=1,3
+       indcolum1=esup2(nvector(i))-esup2(1)
+       indcolum=esup2(nvector(i)+1)-esup2(nvector(i))
+       do j=1,4
+          do k=1,3
+             orden=indcolum1*16+(j-1)*indcolum*4+(indices(k+(i-1)*3)-esup2(nvector(i)))*4
+             esup6(orden+1) = lhs((i-1)*4+j,k*4-3)
+             esup6(orden+2) = lhs((i-1)*4+j,k*4-2)
+             esup6(orden+3) = lhs((i-1)*4+j,k*4-1)         
+             esup6(orden+4) = lhs((i-1)*4+j,k*4)        
+          end do
+       end do
+    end do
+   ! print*,size(esup6)
+    !ESUP 7 GUARDA EN UN VECTOR LOS VALORES DEL RHS
+    do i=1,3
+       do j=1,4
+          esup7((nvector(i)-1)*4+j)=rhs(j+(i-1)*4)
+       end do
+    end do
+    !print*,size(esup6)
+    !stop
+  end subroutine lrhsvector
+
+
 end module calcRHS_mod
