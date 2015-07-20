@@ -47,7 +47,7 @@ PROGRAM NSComp2D
   call readInputData
   !Lee archivo filename.dat
   call loadMeshData
-ALLOCATE (sol(npoin*4))
+  ALLOCATE (sol(npoin*4))
   ALLOCATE(SMOOTH_SIM(2, npoin))
   ALLOCATE(GAMM(npoin), DTL(NELEM), DT(NELEM))
   ALLOCATE(HH_NEW(npoin), SMOOTH_FIX(npoin),x1(npoin),y1(npoin))
@@ -86,7 +86,7 @@ ALLOCATE (sol(npoin*4))
 !!$  end do
 
   !call smoothing(X, Y, inpoel, smooth_fix, npoin, nelem, .95d0)
- ! call CallAll
+  ! call CallAll
   if(NGAS.NE.1) GAMM = GAMA
 
   !CCCC-----> CALCULO DE LOS NODOS CON PERIODICIDAD
@@ -137,7 +137,8 @@ ALLOCATE (sol(npoin*4))
   !SETEAR EL INICIO DEL VECTOR SOL PARA IMPLICITO
   sol=0.d0
   allocate(uold(4,npoin))
-  uold=0.d0
+  uold=u
+
   write(*, '(A, I3, A)') '****-------> RUNGE-KUTTA DE', NRK, '  ORDEN <-------****'
   write(*, *)''
 
@@ -153,11 +154,16 @@ ALLOCATE (sol(npoin*4))
 
   BANDERA = 1
   NESTAB = 1
-
+  !$OMP PARALLEL DO PRIVATE(ipoin)
+  do ipoin = 1, npoin
+     U1(:, ipoin) = U(:, ipoin)
+  end do
+  !$OMP END PARALLEL DO
   call setNewmarkCondition
   OPEN(17,FILE='DESPLAZAMIENTO',STATUS='UNKNOWN')
-  Do while (time.le.1.d0)  
-     !Do While (ITER.LT.MAXITER.AND.ISAL.EQ.0)
+  !Do while (time.le.1.d0)  
+
+  Do While (ITER.LT.MAXITER.AND.ISAL.EQ.0)
 
      ITER = ITER + 1
 
@@ -188,9 +194,9 @@ ALLOCATE (sol(npoin*4))
      TIME = TIME + DTMIN
 
      !$OMP PARALLEL DO PRIVATE(ipoin)
-     do ipoin = 1, npoin
-	U1(:, ipoin) = U(:, ipoin)
-     end do
+ !    do ipoin = 1, npoin
+        !	U1(:, ipoin) = U(:, ipoin)
+  !   end do
      !$OMP END PARALLEL DO
 
      !if (BANDERA.LE.4) THEN
@@ -299,9 +305,9 @@ ALLOCATE (sol(npoin*4))
      BANDERA = BANDERA + 1
 
      !$OMP PARALLEL DO PRIVATE(ipoin)
-     do ipoin = 1, npoin
-	U(:, ipoin) = U1(:, ipoin)
-     end do
+    ! do ipoin = 1, npoin
+!	U(:, ipoin) = U1(:, ipoin)
+ !    end do
      !$OMP END PARALLEL DO
   end do
 
@@ -431,8 +437,9 @@ subroutine RESTART(GAMM,x1,y1,time,iter_old)
      !CCCC----> SI IOLDSOL .NE. 1 INICIALIZA LAS VARIABLES
      !CCCC----> CON LOS VALORES DEL INFINITO
      !CCCC------------------------------------------------
-     RHOAMB=RHO_INF ;  TAMB=T_INF ;UAMB=U_inf ; VAMB=V_inf ; PAMB=RHO_INF*FR*T_INF
-     ! Inicializo x1 e y1 para la impreseion de resultados
+     RHOAMB=RHO_INF*0.8d0 ;  TAMB=T_INF ;UAMB=U_inf ; VAMB=V_inf ; PAMB=RHO_INF*FR*T_INF
+
+     ! Inicializo x1 e y1 para la impresion de resultados
 
      do INOD=1, npoin
 
@@ -440,12 +447,13 @@ subroutine RESTART(GAMM,x1,y1,time,iter_old)
         U(1, INOD)=RHOAMB
         U(2, INOD)=RHOAMB*UAMB
         U(3, INOD)=RHOAMB*VAMB
-        ENERGIA=PAMB/((GAMM(INOD)-1.d0)*RHOAMB)+.5d0*(UAMB**2.d0+VAMB**2.d0)
+        ENERGIA=PAMB/((1.4d0-1.d0)*RHOAMB)+.5d0*(UAMB**2.d0+VAMB**2.d0)
         U(4, INOD)=ENERGIA*RHOAMB
         VEL_X(INOD)=UAMB
         VEL_Y(INOD)=VAMB
         T(INOD)=TAMB
      end do
+
   else
 
      !CCCC----> SI IOLDSOL .EQ. 1 HACE UN RESTART

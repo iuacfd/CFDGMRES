@@ -1,0 +1,7 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 29 12:32:11 2015
+        MODULE MASAS__genmod
+          INTERFACE 
+            SUBROUTINE MASAS
+            END SUBROUTINE MASAS
+          END INTERFACE 
+        END MODULE MASAS__genmod

@@ -1,0 +1,8 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 29 12:32:11 2015
+        MODULE DERIV__genmod
+          INTERFACE 
+            SUBROUTINE DERIV(HMIN)
+              REAL(KIND=8) :: HMIN
+            END SUBROUTINE DERIV
+          END INTERFACE 
+        END MODULE DERIV__genmod

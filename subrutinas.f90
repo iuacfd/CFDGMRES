@@ -87,43 +87,43 @@ contains
 end module Mnormales
 
 subroutine deriv(hmin) !<----- PARA QUE SE USA HMIN?
-	!------------------------------------------
-	! Calcula dNx, dNy y area de cada elemento
-	!------------------------------------------
-	!use MGEOMETRIA
-	use MeshData, only: X, Y, inpoel, area, HH, HHX, HHY, dNx, dNy, nelem
-	implicit none
-	integer ielem
-	real(8) hmin
-	real(8) X_loc(3), Y_loc(3), a
+  !------------------------------------------
+  ! Calcula dNx, dNy y area de cada elemento
+  !------------------------------------------
+  !use MGEOMETRIA
+  use MeshData, only: X, Y, inpoel, area, HH, HHX, HHY, dNx, dNy, nelem
+  implicit none
+  integer ielem
+  real(8) hmin
+  real(8) X_loc(3), Y_loc(3), a
 
-	!$OMP PARALLEL &
-	!$OMP PRIVATE(X_loc, Y_loc, ielem, a)
-	!$OMP DO
-	do ielem = 1,nelem
-	X_loc(:) = X(inpoel(:,ielem))
-	Y_loc(:) = Y(inpoel(:,ielem))
+  !$OMP PARALLEL &
+  !$OMP PRIVATE(X_loc, Y_loc, ielem, a)
+  !$OMP DO
+  do ielem = 1,nelem
+     X_loc(:) = X(inpoel(:,ielem))
+     Y_loc(:) = Y(inpoel(:,ielem))
 
-	area(ielem) = dabs((X_loc(2)*Y_loc(3) + X_loc(3)*Y_loc(1) + X_loc(1)*Y_loc(2)&
-		- (X_loc(2)*Y_loc(1) + X_loc(3)*Y_loc(2) + X_loc(1)*Y_loc(3)))*0.5d0)
-	a = area(ielem)
+     area(ielem) = dabs((X_loc(2)*Y_loc(3) + X_loc(3)*Y_loc(1) + X_loc(1)*Y_loc(2)&
+          - (X_loc(2)*Y_loc(1) + X_loc(3)*Y_loc(2) + X_loc(1)*Y_loc(3)))*0.5d0)
+     a = area(ielem)
 
-	dNx(1, ielem) = (Y_loc(2) - Y_loc(3))/(2.d0*a)
-	dNx(2, ielem) = (Y_loc(3) - Y_loc(1))/(2.d0*a)
-	dNx(3, ielem) = (Y_loc(1) - Y_loc(2))/(2.d0*a)
-	dNy(1, ielem) = (X_loc(3) - X_loc(2))/(2.d0*a)
-	dNy(2, ielem) = (X_loc(1) - X_loc(3))/(2.d0*a)
-	dNy(3, ielem) = (X_loc(2) - X_loc(1))/(2.d0*a)
+     dNx(1, ielem) = (Y_loc(2) - Y_loc(3))/(2.d0*a)
+     dNx(2, ielem) = (Y_loc(3) - Y_loc(1))/(2.d0*a)
+     dNx(3, ielem) = (Y_loc(1) - Y_loc(2))/(2.d0*a)
+     dNy(1, ielem) = (X_loc(3) - X_loc(2))/(2.d0*a)
+     dNy(2, ielem) = (X_loc(1) - X_loc(3))/(2.d0*a)
+     dNy(3, ielem) = (X_loc(2) - X_loc(1))/(2.d0*a)
 
-	! HH(ielem) = dsqrt(area(ielem))
-	! HHX(ielem) = abs(min( X_loc(3) - X_loc(2), X_loc(1) - X_loc(3), X_loc(2) - X_loc(1) ))
-	! HHY(ielem) = abs(min( Y_loc(3) - Y_loc(2), Y_loc(1) - Y_loc(3), Y_loc(2) - Y_loc(1) ))
-	end do
-	!$OMP END DO
-	!$OMP END PARALLEL
+     HH(ielem) = dsqrt(area(ielem))
+     ! HHX(ielem) = abs(min( X_loc(3) - X_loc(2), X_loc(1) - X_loc(3), X_loc(2) - X_loc(1) ))
+     ! HHY(ielem) = abs(min( Y_loc(3) - Y_loc(2), Y_loc(1) - Y_loc(3), Y_loc(2) - Y_loc(1) ))
+  end do
+  !$OMP END DO
+  !$OMP END PARALLEL
 
-	! hmin = minval(hh) 
-	! if(hmin > 1.d10) hmin = 1.d10
+  ! hmin = minval(hh) 
+  ! if(hmin > 1.d10) hmin = 1.d10
 end subroutine deriv
 
 subroutine MASAS()
@@ -154,66 +154,57 @@ subroutine MASAS()
 end subroutine MASAS
 
 subroutine deltat(dtmin, dt)
-	!-------------------------------
-	!		Calcula delta t
-	!-------------------------------
-	!use MALLOCAR
-	!use DATOS_ENTRADA
-	use MeshData, only: inpoel, nelem, area
-	use InputData, only: FSAFE, fr, gama, t_inf
-	use MVELOCIDADES
-	use MVARIABLES
-	implicit real(8) (A-H,O-Z)
-	real(8) DT(nelem), dtmin
-	integer ielem, i, ipoin
-	real(8) T_iel, vumax, vvmax, vu, vv, vel, dtelem, cota, vc
+  !-------------------------------
+  !		Calcula delta t
+  !-------------------------------
+  !use MALLOCAR
+  !use DATOS_ENTRADA
+  use MeshData, only: inpoel, nelem, hh
+  use InputData, only: FSAFE, fr, gama, t_inf
+  use MVELOCIDADES
+  use MVARIABLES
+  implicit real(8) (A-H,O-Z)
+  real(8) DT(nelem), dtmin
+  integer ielem, i, ipoin
+  real(8) T_iel, vumax, vvmax, vu, vv, vel, dtelem, cota, vc
 
-	DTMIN = 1.D20
+  DTMIN = 1.D20
 
-	do ielem = 1, nelem
-	VUMAX = 0.d0
-	VVMAX = 0.d0
+  do ielem = 1, nelem
+     VUMAX = 0.d0
+     VVMAX = 0.d0
 
-	T_iel = (T(inpoel(1, ielem)) + T(inpoel(2, ielem)) + T(inpoel(3, ielem)))/3.d0
+     T_iel = (T(inpoel(1, ielem)) + T(inpoel(2, ielem)) + T(inpoel(3, ielem)))/3.d0
 
-	!GM = GAMA-1.d0 !(GAMM(inpoel(1, ielem))+GAMM(inpoel(2, ielem))+GAMM(inpoel(3, ielem)))/3.d0
-	VC = DSQRT(GAMA*FR*T_iel)
+     !GM = GAMA-1.d0 !(GAMM(inpoel(1, ielem))+GAMM(inpoel(2, ielem))+GAMM(inpoel(3, ielem)))/3.d0
+     VC = DSQRT(GAMA*FR*T_iel)
 
-	!CCCC ----> CALCULO DE LA MAXIMA VELOCIDAD ELEMENTAL
-	do i = 1, 3
+     !CCCC ----> CALCULO DE LA MAXIMA VELOCIDAD ELEMENTAL
+     do i = 1, 3
 	ipoin = inpoel(i, ielem)
 	VU = dabs(VEL_X(ipoin) - W_X(ipoin))
 	VV = dabs(VEL_Y(ipoin) - W_Y(ipoin))
 
 	if (VU.GT.VUMAX) VUMAX = VU
 	if (VV.GT.VVMAX) VVMAX = VV
-	end do
+     end do
 
-	HH=dsqrt(2.d0*AREA(IELEM))
-	VEL=(VUMAX**2+VVMAX**2)**.5D0
-	smu=110.d0
-	fmu=0.0002d0!*(t_iel/t_inf)**1.5d0*(t_inf+smu)/(t_iel+smu)
-	ET=fmu
+     VEL=(VUMAX**2.D0+VVMAX**2.D0)**.5D0         
 
-	Pe=(VEL*HH)/(2.D0*ET)
+     DTELEM=.5D0*HH(IELEM)/(VC+VEL)
+     DT(IELEM)=DTELEM*FSAFE
 
-	ALPHA=MIN(Pe/3.d0,1.D0)
 
-	DELTATU=1.D0/(4.D0*ET/HH**2.D0+ALPHA*VEL/HH)
-	DELTATC=1.D0/(4.D0*ET/HH**2.D0)
+     IF (DTELEM.LT.DTMIN) DTMIN=DTELEM*fsafe
+  END DO
 
-	DTELEM= FSAFE/(1.D0/DELTATC+1.D0/DELTATU)
-	DT(IELEM)=DTELEM
+  COTA = 10.d0*DTMIN !EL VALOR 10 ESTA PUESTO A OJO #MODIFICAR SI ES NECESARIO#
+  do ielem = 1, nelem
 
-	IF (DTELEM.LT.DTMIN) DTMIN=DTELEM
-	END DO
-	COTA = 10.d0*DTMIN !EL VALOR 10 ESTA PUESTO A OJO #MODIFICAR SI ES NECESARIO#
-	do ielem = 1, nelem
+     if(DT(ielem) > COTA) DT(ielem) = COTA
+  end do
 
-	if(DT(ielem) > COTA) DT(ielem) = COTA
-	end do
-
-	return
+  return
 end subroutine deltat
 
 subroutine CUARTO_ORDEN(U, U_n, FR, gamm)
@@ -323,12 +314,13 @@ subroutine CUARTO_ORDEN(U, U_n, FR, gamm)
 	do i= 1, npoin
 	U_n(:, i) = -U_n(:, i)/M(i)
 	end do
+
 	!$OMP END DO
 	!$OMP END PARALLEL
 end subroutine CUARTO_ORDEN
 
 
-SUBROUTINE ESTAB(U,T,GAMA,FR,RMU &
+SUBROUTINE ESTAB(U,T,GAMA,FR,fMU &
      ,DTMIN,RHOINF,TINF,UINF,VINF,GAMM)
 
   use MeshData
@@ -396,7 +388,7 @@ SUBROUTINE ESTAB(U,T,GAMA,FR,RMU &
 
      !FMU= RMU*162.6/(TEMP-110.55)*(TEMP/273.15)**.75D0 !SUTHERLAND
      smu = 110.d0
-     fmu = 0.0002d0!*(temp/tinf)**1.5d0*(tinf+smu)/(temp+smu)
+     !fmu = 0.000d0!*(temp/tinf)**1.5d0*(tinf+smu)/(temp+smu)
      DO I = 1,3
 
 	TERM_1 = DABS(VX*DNX(I,IELEM) + VY*DNY(I,IELEM))
@@ -623,243 +615,232 @@ subroutine fixvel(velocidadx,velocidady)
   !$OMP END PARALLEL DO
 end subroutine FIXVEL
 
-subroutine FIX(FR,GAMM,velocidadx,velocidady)
+subroutine FIX(velocidadx,velocidady)
   !use MALLOCAR
   !use MVARIABFIX
- ! use MVELOCIDADES
+  ! use MVELOCIDADES
+  use Inputdata, only: gama,fr
   use MVARIABLES
   use MeshData
-  use VARIMPLICIT, only : sol
+  use VARIMPLICIT, only : sol 
+  !use PointNeighbor, only: esup7
   implicit real(8) (A-H,O-Z)
-  real(8) GAMM(npoin)
+  !real(8) GAMM(npoin)
   real(8) velocidadx(npoin),velocidady(npoin)
   !$OMP PARALLEL
   !$OMP DO PRIVATE(i)
   do i = 1, nfixrho
-     sol((ifixrho_node(i)-1)*4+1) = rfixrho_value(i)
+    sol((ifixrho_node(i)-1)*4+1) = rfixrho_value(i)
   end do
   !$OMP END DO
 
   !$OMP DO PRIVATE(i, j, GM)
   do i = 1, NFIXT
      j = IFIXT_NODE(i)
-     GM = GAMM(j) - 1.d0
+     GM = GAMa - 1.d0
      T(j) = RFIXT_VALUE(i)
-     sol((j)*4) = T(j)*FR/GM + .5d0*(VELocidadX(j)**2 + VELocidadY(j)**2)
+     sol((j)*4) = (T(j)*FR/GM + .5d0*(VELocidadX(j)**2 + VELocidadY(j)**2))*sol((j-1)*4+1)
   end do
+
   !$OMP END DO
   !$OMP END PARALLEL
 end subroutine FIX
 
 
 
-  subroutine setcondition
-    use varimplicit, only: sol
-    use MeshData, only: npoin 
-    use Mnormales
-    real(8) velocidadx(npoin),velocidady(npoin)
+subroutine setcondition
+
+  use varimplicit, only: sol
+  use MeshData, only: npoin 
+  use Mnormales
+  real(8) velocidadx(npoin),velocidady(npoin)
 
 
-    !SEPARA RHO*U y RHO*V
-    do i=1,npoin
-       velocidadx(i)=sol((i-1)*4+2)/sol((i-1)*4+1)
-       velocidady(i)=sol((i-1)*4+3)/sol((i-1)*4+1)
-    end do
+  !SEPARA RHO*U y RHO*V
+  do i=1,npoin
+     velocidadx(i)=sol((i-1)*4+2)/sol((i-1)*4+1)
+     velocidady(i)=sol((i-1)*4+3)/sol((i-1)*4+1)
+  end do
 
-    !SETEAR CONDICIONES DENTRO DEL PGMRES
-    !CCCC---------------------------------------CCCC
-    !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
-    !CCCC---------------------------------------CCCC
-    !CCCC----> VELOCIDADES IMPUESTAS
-    !CCCC---------------------------
-    call FIXVEL(velocidadx,velocidady)
+  !SETEAR CONDICIONES DENTRO DEL PGMRES
+  !CCCC---------------------------------------CCCC
+  !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
+  !CCCC---------------------------------------CCCC
+  !CCCC----> VELOCIDADES IMPUESTAS
+  !CCCC---------------------------
+  call FIXVEL(velocidadx,velocidady)
 
-    !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
-    !CCCC--------------------------------------------
-    call NORMALVEL(velocidadx,velocidady)
+  !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
+  !CCCC--------------------------------------------
+  call NORMALVEL(velocidadx,velocidady) 
 
-    !CCCC----> VALORES IMPUESTOS
-    !CCCC-----------------------
-    call FIX(FR,GAMM,velocidadx,velocidady)
-
-    !JUNTAR RHO*U y RHO*V
-    do i=1,npoin
-       sol((i-1)*4+2)=velocidadx(i)*sol((i-1)*4+1)
-       sol((i-1)*4+3)=velocidady(i)*sol((i-1)*4+1)
-    end do
-
-  end subroutine setcondition
+  !CCCC----> VALORES IMPUESTOS
+  !CCCC-----------------------
+  call FIX(velocidadx,velocidady)
 
 
-  subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
-    !use DATOS_REFINAMIENTO
-    !use DATOS_ENTRADA
-    !use MALLOCAR
-    !use MVARIABFIX
-    !use MGEOMETRIA
-    !use MFUERZAS
-    !use MMOVIMIENTO
-    use calcRHS_mod
-    use InputData
-    use MNORMALES
-    use MVELOCIDADES
-    use MVARIABGEN
-    use MeshData
-    use MVARIABLES
-    use MESTABILIZACION
-    use TIMERS
-    use PointNeighbor, only: esup1,esup2,esup3,esup4
-    use varimplicit
-    use implicit
-    implicit real(8)(A-H,O-Z)
-    integer BANDERA,dataval,niteracion
-    real(8) GAMM(npoin),converg1,epsilon,converg
-    real(8) dtl(nelem),ukold(4,npoin),convergloc
-    !save uold
-    !if (.not. allocated(uold)) allocate(uold(4,npoin))
-    ! dataval=npoin*4
-    ! DATA ((uold(I,J), I=1,4), J=1,npoin) /dataval*0./ 
-    ! do IRK = 1,NRK
-    !RK_FACT = 1.d0/(NRK + 1 - IRK)
+  !JUNTAR RHO*U y RHO*V
+  do i=1,npoin
+     sol((i-1)*4+2)=velocidadx(i)*sol((i-1)*4+1)
+     sol((i-1)*4+3)=velocidady(i)*sol((i-1)*4+1)
+  end do
 
-    allocate (alu(esup2(npoin+1)*400),jlu(esup2(npoin+1)*400),ju((npoin)*4),vv(npoin*4,im+1))
-    jlu=0
-    ju=0
-    alu=0.d0
-    vv=0.d0
-    ukold=U1
-    converg1=10
-    epsilon=1d-3
-    convergloc=0.d0
-    niteracion=0
-    converg=0.d0
-    DO while (converg1.gt.epsilon.or.niteracion.lt.200) 
-       niteracion=niteracion+1
-       !Setear tolerancia para picard o max numero de iteraciones
+end subroutine setcondition
 
 
+subroutine RK(DTMIN, NRK, BANDERA, GAMM, dtl)
+  !use DATOS_REFINAMIENTO
+  !use DATOS_ENTRADA
+  !use MALLOCAR
+  !use MVARIABFIX
+  !use MGEOMETRIA
+  !use MFUERZAS
+  !use MMOVIMIENTO
+  use calcRHS_mod
+  use InputData
+  use MNORMALES
+  use MVELOCIDADES
+  use MVARIABGEN
+  use MeshData
+  use MVARIABLES
+  use MESTABILIZACION
+  use TIMERS
+  use PointNeighbor, only: esup1,esup2,esup3,esup4
+  use varimplicit
+  use implicit
+  implicit real(8)(A-H,O-Z)
+  integer BANDERA,dataval,niteracion
+  real(8) GAMM(npoin),converg1,epsilon,converg
+  real(8) dtl(nelem),ukold(4,npoin),convergloc
+  !save uold
+  !if (.not. allocated(uold)) allocate(uold(4,npoin))
+  ! dataval=npoin*4
+  ! DATA ((uold(I,J), I=1,4), J=1,npoin) /dataval*0./ 
+  ! do IRK = 1,NRK
+  !RK_FACT = 1.d0/(NRK + 1 - IRK)
 
-       !CCCC  ----> SOLO CALCULO UNA VEZ EL TERMINO DE ESTABILIZACION
-       !if(IRK.EQ.1)THEN
-       !DEBUGGG
-       timer(cuarto_orden(U1,UN,FR,gamm), cuarto_t)
-       timer(estab(U1,T,GAMA,FR,RMU,DTMIN,RHO_inf,T_inf,U_inf,V_inf,GAMM), estab_t)
-       ! end if
+  if (.not.allocated(alu)) allocate (alu(size(esup3,1)*5000))
+  if (.not.allocated(jlu)) allocate (jlu(size(esup3,1)*5000))
+  if (.not.allocated(ju)) allocate (ju(npoin*4))
+  if (.not.allocated(vv)) allocate (vv(npoin*4,im+1))
 
-       !$OMP PARALLEL DO PRIVATE(ipoin)
-       do ipoin = 1, npoin
-          RHS(:, ipoin) = 0.d0
-       end do
-       !$OMP END PARALLEL DO
 
-       timer( ncalcRHS( U1, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, nelem, npoin,uold), calcrhs_t)
-       ! timer(calcRHS(U, UN, RHS, P, RMU, dtl, gamm), calcrhs_t)
-       ! call rhs_diffusive&
-       ! (rhs, U, dnx, dny, area, dtl, T, gamm, fr, fmu, fk, fcv, T_inf, inpoel, npoin, nelem)
+!print*,uold
 
-       !CCCC  ----> CALCULO DE LOS TERMINOS FUENTES
-       !DEBUGGG
-       timer(FUENTE(dtl), fuente_t)
+  converg1=10
+  epsilon=1d-10
 
-       !CCCC ----> INTEGRADOR TEMPORAL
-       !$OMP PARALLEL DO PRIVATE(ipoin)
-       ! do ipoin = 1, npoin
-       !	U1(:, ipoin) = U(:, ipoin) - rk_fact/M(ipoin)*RHS(:, ipoin)
-       ! end do
+  niteracion=0
+
+  DO while (converg1.gt.epsilon.and.niteracion.lt.30)
+     ukold=U1
+     vv=0.d0 
+     jlu=0
+     ju=0
+     alu=0.d0
+     converg=0.d0
+     convergloc=0.d0
+     niteracion=niteracion+1
+     !Setear tolerancia para picard o max numero de iteraciones
+
+
+     !CCCC  ----> SOLO CALCULO UNA VEZ EL TERMINO DE ESTABILIZACION
+     !if(IRK.EQ.1)THEN
+     !DEBUGGG
+     timer(cuarto_orden(U1,UN,FR,gamm), cuarto_t)
+
+     timer(estab(U1,T,GAMA,FR,fMU,DTMIN,RHO_inf,T_inf,U_inf,V_inf,GAMM), estab_t)
+
+
+
+     timer(ncalcRHS( U1, UN, dNx, dNy, area, shoc, dtl, t_sugn1, t_sugn2, t_sugn3, nelem, npoin,ukold), calcrhs_t)
+     ! timer(calcRHS(U, UN, RHS, P, RMU, dtl, gamm), calcrhs_t)
+     ! call rhs_diffusive&
+     ! (rhs, U, dnx, dny, area, dtl, T, gamm, fr, fmu, fk, fcv, T_inf, inpoel, npoin, nelem)
+
+     !CCCC  ----> CALCULO DE LOS TERMINOS FUENTES
+     !DEBUGGG
+     !timer(FUENTE(dtl), fuente_t)
+
 
 !!$ LLAMADO A SUBRUTINA DE GMRES
 
-       call intimpli
+     call intimpli
 
 !!!!!PASAR DE SOL A U1
+     call setcondition
+!!$       do i=1,28
+!!$          print*,i
+!!$          do j=1,4
+!!$             print*,sol((i-1)*4+j)
+!!$          end do
+!!$       end do
+!!$       pause
+     do i=1,npoin
+        do k=1,4
+           u1(k,i)=sol((i-1)*4+k)
+        end do
+     end do
+     !$OMP END PARALLEL DO
 
-       do i=1,npoin
-          do k=1,4
-             u1(k,i)=sol((i-1)*4+k)
-          end do
-       end do
-       !$OMP END PARALLEL DO
+     !CCCC----------------------------------------------
+     !CCCC----> PASA A LA VARIABLE PRIMARIA PARA APLICAR
+     !CCCC----> LAS CONDICIONES DE CONTORNO								
+     !CCCC----------------------------------------------
 
-       !CCCC----------------------------------------------
-       !CCCC----> PASA A LA VARIABLE PRIMARIA PARA APLICAR
-       !CCCC----> LAS CONDICIONES DE CONTORNO								
-       !CCCC----------------------------------------------
+     if(NGAS.EQ.1) GO TO 112
+     !$OMP PARALLEL DO PRIVATE(IPOIN, VEL2)
+     do ipoin = 1, npoin
+        RHO(ipoin) = U1(1,ipoin)
+        VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
+        VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
+        E(ipoin) = U1(4,ipoin)/RHO(ipoin)
+        VEL2 = (VEL_X(ipoin)**2 + VEL_Y(ipoin)**2)
+        P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
+        T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
+        RMACH(ipoin) = DSQRT(VEL2/(T(ipoin)*GAMM(ipoin)*FR))
+     end do
+     !$OMP END PARALLEL DO
 
-       if(NGAS.EQ.1) GO TO 112
-       !$OMP PARALLEL DO PRIVATE(IPOIN, VEL2)
-       do ipoin = 1, npoin
-          RHO(ipoin) = U1(1,ipoin)
-          VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
-          VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
-          E(ipoin) = U1(4,ipoin)/RHO(ipoin)
-          VEL2 = (VEL_X(ipoin)**2 + VEL_Y(ipoin)**2)
-          P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
-          T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
-          RMACH(ipoin) = DSQRT(VEL2/(T(ipoin)*GAMM(ipoin)*FR))
-       end do
-       !$OMP END PARALLEL DO
+112  CONTINUE
 
-112    CONTINUE
-
-       !CCCC----> CASO PARA AIRE EN EQUILIBRIO
-       !CCCC----------------------------------------------
-       if(NGAS.NE.0)THEN
-          do ipoin = 1, npoin
-             RHO(ipoin) = U1(1,ipoin)
-             E(ipoin) = U1(4,ipoin)/RHO(ipoin)
-             VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
-             VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
-             VEL2 = VEL_X(ipoin)**2.d0 + VEL_Y(ipoin)**2.d0
-             P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
-             T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
-             if(IRK.EQ.NRK)THEN
-                call TGAS(E(ipoin)-.5d0*VEL2,RHO(ipoin),PGAS,AGAS,TGASi,GAMI)
-                GAMM(ipoin) = GAMI
-                P(ipoin) = PGAS
-                T(ipoin) = TGASi
-                RMACH(ipoin) = DSQRT(VEL2)/AGAS
-             end if
-          end do
-       end if
+     !CCCC----> CASO PARA AIRE EN EQUILIBRIO
+     !CCCC----------------------------------------------
+     if(NGAS.NE.0)THEN
+        do ipoin = 1, npoin
+           RHO(ipoin) = U1(1,ipoin)
+           E(ipoin) = U1(4,ipoin)/RHO(ipoin)
+           VEL_X(ipoin) = U1(2,ipoin)/RHO(ipoin)
+           VEL_Y(ipoin) = U1(3,ipoin)/RHO(ipoin)
+           VEL2 = VEL_X(ipoin)**2.d0 + VEL_Y(ipoin)**2.d0
+           P(ipoin) = RHO(ipoin)*(GAMM(ipoin)-1.d0)*(E(ipoin)-.5d0*VEL2)
+           T(ipoin) = P(ipoin)/(RHO(ipoin)*FR)
+           if(IRK.EQ.NRK)THEN
+              call TGAS(E(ipoin)-.5d0*VEL2,RHO(ipoin),PGAS,AGAS,TGASi,GAMI)
+              GAMM(ipoin) = GAMI
+              P(ipoin) = PGAS
+              T(ipoin) = TGASi
+              RMACH(ipoin) = DSQRT(VEL2)/AGAS
+           end if
+        end do
+     end if
 
 
-!!$     !CCCC---------------------------------------CCCC
-!!$     !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
-!!$     !CCCC---------------------------------------CCCC
-!!$
-!!$     !CCCC----> VELOCIDADES IMPUESTAS
-!!$     !CCCC---------------------------
-!!$     call FIXVEL
-!!$
-!!$     !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
-!!$     !CCCC--------------------------------------------
-!!$     call NORMALVEL
-!!$
-!!$     !CCCC----> VALORES IMPUESTOS
-!!$     !CCCC-----------------------
-!!$     call FIX(FR,GAMM)
 
-       !$OMP PARALLEL DO PRIVATE(ipoin)
-       do ipoin = 1, npoin
-          U1(1,ipoin) = RHO(ipoin)
-          U1(2,ipoin) = VEL_X(ipoin)*RHO(ipoin)
-          U1(3,ipoin) = VEL_Y(ipoin)*RHO(ipoin)
-          U1(4,ipoin) = E(ipoin)*RHO(ipoin)
-       end do
-       !$OMP END PARALLEL DO
+     !SETEAR CONVERGENCIA PARA PICARD
+     do ipoin = 1, npoin
+        convergloc=convergloc+(u1(4,ipoin)-ukold(4,ipoin))**2.d0
+        converg=converg+(u1(4,ipoin))**2.d0
+     end do
 
-       !SETEAR CONVERGENCIA PARA PICARD
-       do ipoin = 1, npoin
-          convergloc=convergloc+(u1(4,ipoin)-ukold(4,ipoin))**2.d0
-          converg=converg+(u1(4,ipoin))**2.d0
-       end do
-       converg1=dsqrt(convergloc/converg)
-       ukold=u1
-    end do
+     converg1=dsqrt(convergloc/converg)
+     !print*,converg1
+     ukold=u1
+  end do
 
-    uold=u1
-
-  end subroutine RK
+  uold=u1
+  !sprint*,uold
+end subroutine RK
 
 subroutine ADAMSB(DTMIN, NESTAB, GAMM, dtl)
 	!use DATOS_REFINAMIENTO
@@ -883,7 +864,7 @@ subroutine ADAMSB(DTMIN, NESTAB, GAMM, dtl)
 	if (NESTAB.EQ.4) NESTAB = 1
 	if (NESTAB.EQ.2) THEN
 		timer(cuarto_orden(U1,UN,FR,gamm), cuarto_t)
-		timer(estab(U,T,GAMA,FR,RMU,DTMIN,RHO_inf,T_inf,U_inf,V_inf, GAMM), estab_t)
+		timer(estab(U1,T,GAMA,FR,RMU,DTMIN,RHO_inf,T_inf,U_inf,V_inf, GAMM), estab_t)
 	end if
 	NESTAB = NESTAB + 1
 

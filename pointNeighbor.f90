@@ -159,8 +159,8 @@ contains
   subroutine esup3aux
     !se llama en PointNeighbor.f90
     use MeshData, only: npoin
-    !use PointNeighbor, only: esup1,esup2,esup3        
-    integer(4) p,contador,contador1
+    !use PointNeighbor, only: esup1,esup2,esup3       
+    integer(4) p,contador,contador1,ipoin,factor,i
     p=0
     contador =0
     do ipoin=1,npoin

@@ -22,7 +22,7 @@ END MODULE TIMERS
 
 
 MODULE VARIMPLICIT
-  integer*4, parameter :: im = 20 !size of krylov subspace
+  integer*4, parameter :: im =49 !size of krylov subspace
   REAL(8), dimension(:), allocatable:: alu,sol!se alloca en RK en subrutinas.f90
   integer(4), dimension(:), allocatable:: jlu,ju
   real(8), dimension(:,:), allocatable:: vv

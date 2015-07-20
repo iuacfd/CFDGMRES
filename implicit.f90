@@ -2,156 +2,6 @@ module implicit
 !!!NO INDEXARRRRRRRRR. SE MUEVE TODO LO QUE ESTA EN FORTRAN 77
 contains
 
-!!$  subroutine CallAll
-!!$    use PointNeighbor
-!!$    use MeshData, only: inpoel, nelem, npoin
-!!$    implicit none
-!!$    call getEsup(inpoel,nelem,npoin)
-!!$    call getLocal
-!!$  end subroutine CallAll
-
-
-!!$  subroutine getLocal
-!!$    use PointNeighbor, only: esup2, esup1
-!!$    use MeshData, only: inpoel, nelem, npoin
-!!$    implicit none
-!!$    integer, dimension(:), allocatable :: lnum1
-!!$    integer ipoin, ielem, iesup, jpoin, i
-
-
-!!$    !Armar vector con las posiciones locales en un elemento del nodo i
-!!$    allocate(lnum1(esup2(npoin+1)))
-!!$    do ipoin=1,npoin
-!!$       do iesup=esup2(ipoin)+1, esup2(ipoin+1)
-!!$          ielem=esup1(iesup)
-!!$          do i=1,3
-!!$             jpoin=inpoel(i,ielem)
-!!$             if(jpoin==ipoin) then
-!!$                lnum1(iesup)=i
-!!$             end if
-!!$          enddo
-!!$       end do
-!!$    end do
-!!$
-!!$    do i=1, esup2(npoin+1)
-!!$       print*,esup1(i),lnum1(i)
-!!$    end do
-!!$    stop
-!!$  end subroutine getLocal
-
-
-!!$  subroutine esup4aux
-!!$    !se llama en PointNeighbor.f90
-!!$    use MeshData, only: npoin
-!!$    use PointNeighbor, only: esup2,esup4        
-!!$    integer(4) ipoin,factor
-!!$    !ESUP4 INDICE GLOBAL DE COLUMNAS
-!!$    esup2=esup2+1 
-!!$    esup4(1)=esup2(1)  
-!!$    do ipoin=1,npoin    
-!!$       factor=4*(esup2(ipoin+1)-esup2(ipoin))
-!!$       esup4(ipoin*4-2) = esup4(ipoin*4-3) + factor
-!!$       esup4(ipoin*4-1) = esup4(ipoin*4-2) + factor 
-!!$       esup4(ipoin*4)   = esup4(ipoin*4-1) + factor 
-!!$       esup4(ipoin*4+1) = esup4(ipoin*4)   + factor
-!!$    end do
-!!$  end subroutine esup4aux
-!!$
-!!$
-!!$  subroutine esup3aux
-!!$    !se llama en PointNeighbor.f90
-!!$    use MeshData, only: npoin
-!!$    use PointNeighbor, only: esup1,esup2,esup3        
-!!$    integer(4) p,contador,contador1
-!!$    p=0
-!!$    contador =0
-!!$    do ipoin=1,npoin
-!!$       factor=(esup2(ipoin+1)-esup2(ipoin))
-!!$       do i=1,4
-!!$          do l= 1,factor
-!!$             contador=contador+1
-!!$             if (i.eq.1.and.l.eq.1) contador1=contador 
-!!$             if (l.eq.1) contador=contador1
-!!$             p=p+1
-!!$             esup3(p) = esup1(contador)*4-3
-!!$             p=p+1     
-!!$             esup3(p) = esup1(contador)*4-2
-!!$             p=p+1     
-!!$             esup3(p) = esup1(contador)*4-1
-!!$             p=p+1     
-!!$             esup3(p) = esup1(contador)*4
-!!$          end do
-!!$       end do
-!!$    end do
-!!$  end subroutine esup3aux
-!!$
-!!$  subroutine esup5aux
-    !Esup5 guarda las posiciones de los ipoi por elemento teniendo en cuenta los esup2. Sirve para pasar de la matriz local 12*12 a la matriz global.
-    !se llama en PointNeighbor.f90
-!!$    use PointNeighbor, only: esup2,esup5
-!!$    use MeshData, only: inpoel, nelem
-!!$    integer(4) ipoi(3)
-!!$    integer(4)p,l,m,i,ielem
-!!$    m=0
-!!$    do ielem=1,nelem
-!!$
-!!$       ipoi(1)=inpoel(1,ielem); ipoi(2)=inpoel(2,ielem); ipoi(3)=inpoel(3,ielem)
-!!$       do i=1,3     !barre nodos de los elementos
-!!$          do p=1,3  !barre nodos dentro de un nodo de esup2
-!!$             do l=1,esup2(ipoi(i)+1)-esup2(ipoi(i))   !para buscar la posicion   
-!!$                if (ipoi(p).eq.esup1(esup2(ipoi(i))+l-1)) then
-!!$                   m=m+1
-!!$                   esup5(m)=esup2(ipoi(i))+l-1
-!!$                   exit
-!!$                end if
-!!$             end do
-!!$          end do
-!!$       end do
-!!$    end do
-!!$  end subroutine esup5aux
-
-
-
-!!$  subroutine lrhsvector(lhs,rhs,ipoi1,ipoi2,ipoi3)
-!!$    use PointNeighbor, only: esup2,esup4,esup5,esup6,esup7
-!!$    !PARA PASAR DE LHS LOCAL A VECTOR DE LHS GLOBAL
-!!$    !ESUP6 GUARDA LOS VALORES DEL LHS EN FORMA DE VECTOR
-!!$    implicit none
-!!$    real*8, dimension(12,12):: lhs
-!!$    real*8, dimension(12):: rhs   
-!!$    integer*4, dimension(3):: nvector
-!!$    integer(4) orden,indices(9),indcolum1,indcolum,i,j,k,ielem
-!!$    integer(4) ipoi1,ipoi2,ipoi3
-!!$
-!!$    nvector=(/ ipoi1,ipoi2,ipoi3 /)
-!!$
-!!$    do ielem=1,3
-!!$       do i=1,9
-!!$          indices(i)=esup5((nvector(ielem)-1)*9+i)
-!!$       end do
-!!$
-!!$       do i=1,3
-!!$          indcolum1=esup2(nvector(i))-esup2(1)
-!!$          indcolum=esup2(nvector(i)+1)-esup2(nvector(i))
-!!$          do j=1,4
-!!$             do k=1,3
-!!$                orden=indcolum1*16+(j-1)*indcolum*4+(indices(k+(i-1)*3)-esup2(nvector(i)))*4
-!!$                esup6(orden+1) = lhs((i-1)*4+j,k*4-3)
-!!$                esup6(orden+2) = lhs((i-1)*4+j,k*4-2)
-!!$                esup6(orden+3) = lhs((i-1)*4+j,k*4-1)         
-!!$                esup6(orden+4) = lhs((i-1)*4+j,k*4)        
-!!$             end do
-!!$          end do
-!!$       end do
-!!$    end do
-!!$    !ESUP 7 GUARDA EN UN VECTOR LOS VALORES DEL RHS
-!!$    do i=1,3
-!!$       do j=1,4
-!!$          esup7(nvector(i-1)*4+j)=rhs(j+(i-1)*4)
-!!$       end do
-!!$    end do
-!!$
-!!$  end subroutine lrhsvector
 
 
   subroutine intimpli
@@ -167,66 +17,28 @@ contains
     n = (npoin*4)
     allocate (w(n+1),jw(2*n))
     nz_num = (esup4(npoin*4+1)-esup4(1))
-    eps=1.D-8
+    eps=1.D-15
     maxits=100	
-    iout=1
-    lfil=npoin*80
-    droptol=1d-3
-    iwk=n*40
-
+    iout=0
+    lfil=n!poin
+    droptol=1d-9
+    iwk=n*100
 
     call ilut(n,esup6,esup3,esup4,lfil,droptol,alu,jlu,ju,iwk,w,jw,ierr)
 
     if (ierr.ne.0) then
        print*, "PROBLEMA DE ILUT:", ierr
-      ! stop
+       ! stop
     end if
 
     call pgmres(n, im, esup7, sol, vv, eps, maxits, iout, esup6, esup3, esup4, alu, jlu, ju, ierr)
 
     if (ierr.ne.0)then
        print*, "PROBLEMA DE GMRES:", ierr
-       stop
+       ! stop
     end if
 
   end subroutine intimpli
-
-!!$  subroutine setcondition
-!!$    use varimplicit, only: sol
-!!$    use MeshData, only: npoin 
-!!$    use Mnormales
-!!$    real(8) velocidadx(npoin),velocidady(npoin)
-!!$
-!!$
-!!$    !SEPARA RHO*U y RHO*V
-!!$    do i=1,npoin
-!!$       velocidadx(i)=sol((i-1)*4+2)/sol((i-1)*4+1)
-!!$       velocidady(i)=sol((i-1)*4+3)/sol((i-1)*4+1)
-!!$    end do
-!!$
-!!$    !SETEAR CONDICIONES DENTRO DEL PGMRES
-!!$    !CCCC---------------------------------------CCCC
-!!$    !CCCC  ----> CONDICIONES DE CONTORNO <----  CCCC
-!!$    !CCCC---------------------------------------CCCC
-!!$    !CCCC----> VELOCIDADES IMPUESTAS
-!!$    !CCCC---------------------------
-!!$    call FIXVEL(velocidadx,velocidady)
-!!$
-!!$    !CCCC----> CORRECCION DE LAS VELOCIDADES NORMALES
-!!$    !CCCC--------------------------------------------
-!!$    call NORMALVEL(velocidadx,velocidady)
-!!$
-!!$    !CCCC----> VALORES IMPUESTOS
-!!$    !CCCC-----------------------
-!!$    call FIX(FR,GAMM,velocidadx,velocidady)
-!!$
-!!$    !JUNTAR RHO*U y RHO*V
-!!$    do i=1,npoin
-!!$       sol((i-1)*4+2)=velocidadx(i)*sol((i-1)*4+1)
-!!$       sol((i-1)*4+3)=velocidady(i)*sol((i-1)*4+1)
-!!$    end do
-!!$
-!!$  end subroutine setcondition
 
 
 !!$c-----------------------------------------------------------------------
@@ -428,6 +240,7 @@ contains
 !!$c     
 !!$c     call preconditioner.
 !!$c     
+  
      call lusol (n, rhs, rhs, alu, jlu, ju)
      do 17 k=1, n
      sol(k) = sol(k) + rhs(k) 
@@ -435,8 +248,8 @@ contains
 !!$c     
 !!$c     restart outer loop  when necessary
 !!$c     
-
-     call setcondition
+     !call setcondition
+    
      if (ro .le. eps1) goto 990
      if (its .ge. maxits) goto 991
 !!$c     
